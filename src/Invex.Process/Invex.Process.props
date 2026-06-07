@@ -1,5 +1,5 @@
 <Project>
     <ItemGroup>
-        <Using Include="DecSm.Atom.Process" Global="true"/>
+        <Using Include="Invex.Process" Global="true"/>
     </ItemGroup>
 </Project>
