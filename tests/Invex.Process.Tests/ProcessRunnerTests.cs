@@ -18,7 +18,7 @@ internal sealed class ProcessRunnerTests
             {
                 AllowFailedResult = true,
             }
-            : new("sh", ["-c", "exit 1"])
+            : new("sh", "-c \"exit 1\"")
             {
                 AllowFailedResult = true,
             };
@@ -29,7 +29,7 @@ internal sealed class ProcessRunnerTests
             {
                 AllowFailedResult = true,
             }
-            : new("sh", ["-c", $"echo {text} >&2"])
+            : new("sh", $"-c \"echo {text} >&2\"")
             {
                 AllowFailedResult = true,
             };
@@ -37,7 +37,7 @@ internal sealed class ProcessRunnerTests
     private static ProcessRunOptions EchoEnvVarOptions(string varName) =>
         OperatingSystem.IsWindows()
             ? new ProcessRunOptions("cmd", $"/c echo %{varName}%")
-            : new("sh", ["-c", $"echo ${varName}"]);
+            : new("sh", $"-c \"echo ${varName}\"");
 
     private static ProcessRunOptions PrintCwdOptions() =>
         OperatingSystem.IsWindows()
