@@ -1,0 +1,160 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, feature/**, patch/** ]
+  release:
+    types: [ released ]
+  workflow_dispatch:
+
+permissions: { }
+
+jobs:
+
+  SetupBuildInfo:
+    runs-on: ubuntu-latest
+    outputs:
+      build-name: ${{ steps.SetupBuildInfo.outputs.build-name }}
+      build-id: ${{ steps.SetupBuildInfo.outputs.build-id }}
+      build-version: ${{ steps.SetupBuildInfo.outputs.build-version }}
+      build-timestamp: ${{ steps.SetupBuildInfo.outputs.build-timestamp }}
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: SetupBuildInfo
+        id: SetupBuildInfo
+        run: dotnet run --project _atom/_atom.csproj -- SetupBuildInfo --skip --headless
+
+  PackProjects:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: PackProjects
+        id: PackProjects
+        run: dotnet run --project _atom/_atom.csproj -- PackProjects --skip --headless
+
+      - name: Store Invex.Process
+        uses: actions/upload-artifact@v7
+        with:
+          name: Invex.Process
+          path: '${{ github.workspace }}/.github/publish/Invex.Process'
+
+  TestProjects:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-framework: [ net8.0, net9.0, net10.0 ]
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup .NET 8.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup .NET 9.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+
+      - name: TestProjects
+        id: TestProjects
+        run: dotnet run --project _atom/_atom.csproj -- TestProjects --skip --headless
+        env:
+          test-framework: ${{ matrix.test-framework }}
+          build-slice: ${{ matrix.test-framework }}
+
+      - name: Store Invex.Process.Tests
+        uses: actions/upload-artifact@v7
+        with:
+          name: 'Invex.Process.Tests-${{ matrix.test-framework }}'
+          path: '${{ github.workspace }}/.github/publish/Invex.Process.Tests'
+
+  PushToNuget:
+    needs: [ TestProjects, PackProjects, SetupBuildInfo ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Retrieve Invex.Process
+        uses: actions/download-artifact@v8
+        with:
+          name: Invex.Process
+          path: '${{ github.workspace }}/.github/artifacts/Invex.Process'
+
+      - name: PushToNuget
+        id: PushToNuget
+        run: dotnet run --project _atom/_atom.csproj -- PushToNuget --skip --headless
+        env:
+          build-id: ${{ needs.SetupBuildInfo.outputs.build-id }}
+          nuget-push-api-key: ${{ secrets.NUGET_PUSH_API_KEY }}
+
+  PushToRelease:
+    permissions:
+      contents: write
+    needs: [ TestProjects, PackProjects, SetupBuildInfo ]
+    if: contains(needs.SetupBuildInfo.outputs.build-version, '-') == false
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Retrieve Invex.Process
+        uses: actions/download-artifact@v8
+        with:
+          name: Invex.Process
+          path: '${{ github.workspace }}/.github/artifacts/Invex.Process'
+
+      - name: PushToRelease
+        id: PushToRelease
+        run: dotnet run --project _atom/_atom.csproj -- PushToRelease --skip --headless
+        env:
+          build-version: ${{ needs.SetupBuildInfo.outputs.build-version }}
+          build-id: ${{ needs.SetupBuildInfo.outputs.build-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
