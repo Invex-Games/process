@@ -19,6 +19,12 @@ public static class ProcessHostExtensions
         ///     <see cref="IProcessRunner" /> rather than constructing
         ///     <see cref="System.Diagnostics.Process" /> instances directly.
         /// </remarks>
+        /// <example>
+        ///     <code>
+        ///     var builder = Host.CreateApplicationBuilder(args);
+        ///     builder.Services.AddProcessRunner();
+        ///     </code>
+        /// </example>
         public IServiceCollection AddProcessRunner() =>
             serviceCollection.AddSingleton<IProcessRunner, ProcessRunner>();
     }

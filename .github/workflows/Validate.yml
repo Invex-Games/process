@@ -111,5 +111,5 @@ jobs:
         env:
           build-version: ${{ needs.SetupBuildInfo.outputs.build-version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ github.event.number }}
+          github-pull-request-number: ${{ github.event.number }}
 

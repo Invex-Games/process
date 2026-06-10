@@ -1,0 +1,109 @@
+﻿[
+  {
+    Name: Invex.Process.IProcessRunner,
+    Members: [
+      {
+        Name: Run
+      },
+      {
+        Name: RunAsync
+      }
+    ]
+  },
+  {
+    Name: Invex.Process.ProcessHostExtensions,
+    Members: [
+      {
+        Name: AddProcessRunner
+      }
+    ]
+  },
+  {
+    Name: Invex.Process.ProcessRunOptions,
+    Members: [
+      {
+        Name: <Clone>$
+      },
+      {
+        Name: AllowFailedResult
+      },
+      {
+        Name: Args
+      },
+      {
+        Name: Deconstruct
+      },
+      {
+        Name: EnvironmentVariables
+      },
+      {
+        Name: Equals
+      },
+      {
+        Name: Equals
+      },
+      {
+        Name: ErrorLogLevel
+      },
+      {
+        Name: GetHashCode
+      },
+      {
+        Name: InvocationLogLevel
+      },
+      {
+        Name: Name
+      },
+      {
+        Name: OutputLogLevel
+      },
+      {
+        Name: ToString
+      },
+      {
+        Name: TransformError
+      },
+      {
+        Name: TransformOutput
+      },
+      {
+        Name: WorkingDirectory
+      }
+    ]
+  },
+  {
+    Name: Invex.Process.ProcessRunResult,
+    Members: [
+      {
+        Name: <Clone>$
+      },
+      {
+        Name: Deconstruct
+      },
+      {
+        Name: Equals
+      },
+      {
+        Name: Equals
+      },
+      {
+        Name: Error
+      },
+      {
+        Name: ExitCode
+      },
+      {
+        Name: GetHashCode
+      },
+      {
+        Name: Output
+      },
+      {
+        Name: RunOptions
+      },
+      {
+        Name: ToString
+      }
+    ]
+  }
+]
