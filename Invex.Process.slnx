@@ -1,5 +1,9 @@
 ﻿<Solution>
-  <Project Path="src/Invex.Process/Invex.Process.csproj" />
-  <Project Path="tests/Invex.Process.Tests/Invex.Process.Tests.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Invex.Process/Invex.Process.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Invex.Process.Tests/Invex.Process.Tests.csproj" />
+  </Folder>
   <Project Path="_atom/_atom.csproj" />
 </Solution>

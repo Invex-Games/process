@@ -16,11 +16,25 @@
 ///         and uniform error handling across all process invocations.
 ///     </para>
 /// </remarks>
+/// <example>
+///     Running a tool and inspecting its captured output:
+///     <code>
+///     var result = await processRunner.RunAsync(
+///         new ProcessRunOptions("git", "rev-parse HEAD")
+///         {
+///             WorkingDirectory = repoRoot,
+///         },
+///         cancellationToken);
+///
+///     var commitSha = result.Output.Trim();
+///     </code>
+/// </example>
 [PublicAPI]
 public interface IProcessRunner
 {
     /// <summary>
-    ///     Executes an external process synchronously and returns its result.
+    ///     Executes an external process synchronously, blocking until it exits, and returns its
+    ///     result.
     /// </summary>
     /// <param name="options">The configuration for the process execution.</param>
     /// <returns>
@@ -31,17 +45,23 @@ public interface IProcessRunner
     /// <exception cref="Exception">
     ///     Thrown when the process exits with a non-zero code and
     ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>false</c>.  The message
-    ///     includes the command name, exit code, and any captured stderr.
+    ///     includes the command line, exit code, working directory (when set), and any captured
+    ///     stderr.
+    /// </exception>
+    /// <exception cref="System.ComponentModel.Win32Exception">
+    ///     Thrown when the executable named by <see cref="ProcessRunOptions.Name" /> cannot be
+    ///     found or started.
     /// </exception>
     ProcessRunResult Run(ProcessRunOptions options);
 
     /// <summary>
-    ///     Executes an external process asynchronously and returns its result.
+    ///     Executes an external process asynchronously and returns its result when it exits.
     /// </summary>
     /// <param name="options">The configuration for the process execution.</param>
     /// <param name="cancellationToken">
     ///     A token that cancels the wait for the process to exit.  Note: cancelling the token
-    ///     aborts the wait but does <em>not</em> kill the underlying OS process.
+    ///     aborts the wait but does <em>not</em> kill the underlying OS process, which continues
+    ///     to run; any output captured so far is discarded.
     /// </param>
     /// <returns>
     ///     A task that resolves to a <see cref="ProcessRunResult" /> when the process exits.
@@ -50,10 +70,17 @@ public interface IProcessRunner
     /// </returns>
     /// <exception cref="Exception">
     ///     Thrown (on the returned task) when the process exits with a non-zero code and
-    ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>false</c>.
+    ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>false</c>.  The message
+    ///     includes the command line, exit code, working directory (when set), and any captured
+    ///     stderr.
+    /// </exception>
+    /// <exception cref="System.ComponentModel.Win32Exception">
+    ///     Thrown when the executable named by <see cref="ProcessRunOptions.Name" /> cannot be
+    ///     found or started.
     /// </exception>
     /// <exception cref="OperationCanceledException">
-    ///     Thrown when <paramref name="cancellationToken" /> is cancelled before the process exits.
+    ///     Thrown (on the returned task) when <paramref name="cancellationToken" /> is cancelled
+    ///     before the process exits.
     /// </exception>
     Task<ProcessRunResult> RunAsync(ProcessRunOptions options, CancellationToken cancellationToken = default);
 }
@@ -75,10 +102,14 @@ public interface IProcessRunner
 ///         transform suppresses the line from both the log and the captured result.
 ///     </para>
 ///     <para>
-///         On a non-zero exit code without <see cref="ProcessRunOptions.AllowFailedResult" />,
-///         stdout and stderr are promoted to at least <see cref="LogLevel.Information" /> /
-///         <see cref="LogLevel.Warning" /> respectively (if they were configured below those
-///         thresholds) before a descriptive exception is thrown.
+///         On a non-zero exit code, the complete captured stdout and stderr are re-logged in full
+///         — stdout at <see cref="LogLevel.Information" /> and stderr at
+///         <see cref="LogLevel.Warning" /> — when their configured per-line levels
+///         (<see cref="ProcessRunOptions.OutputLogLevel" /> / <see cref="ProcessRunOptions.ErrorLogLevel" />)
+///         are below <see cref="LogLevel.Information" />.  This happens regardless of
+///         <see cref="ProcessRunOptions.AllowFailedResult" />, ensuring failure diagnostics are
+///         visible even when per-line output logging was suppressed.  A descriptive exception is
+///         then thrown unless <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>true</c>.
 ///     </para>
 /// </remarks>
 /// <param name="logger">The logger for capturing process execution diagnostics.</param>

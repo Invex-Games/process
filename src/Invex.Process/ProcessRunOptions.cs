@@ -16,6 +16,18 @@
 ///         of log level, so callers can inspect the full output even when logs are suppressed.
 ///     </para>
 /// </remarks>
+/// <example>
+///     Running a quiet, failure-tolerant invocation with a custom environment:
+///     <code>
+///     var options = new ProcessRunOptions("dotnet", ["build", "--configuration", configuration])
+///     {
+///         WorkingDirectory = projectDirectory,
+///         InvocationLogLevel = LogLevel.Debug,
+///         AllowFailedResult = true,
+///         EnvironmentVariables = { ["DOTNET_NOLOGO"] = "1" },
+///     };
+///     </code>
+/// </example>
 /// <param name="Name">The name or path of the executable to run (e.g. <c>"dotnet"</c>, <c>"git"</c>).</param>
 /// <param name="Args">The command-line arguments to pass to the executable as a pre-joined string.</param>
 [PublicAPI]
@@ -57,10 +69,17 @@ public sealed record ProcessRunOptions(string Name, string Args)
     ///     Gets the log level used when streaming each line of the process's standard output.
     /// </summary>
     /// <remarks>
-    ///     Defaults to <see cref="LogLevel.Debug" />.  The full stdout is still captured into
-    ///     <see cref="ProcessRunResult.Output" /> regardless of this setting, so callers can
-    ///     inspect it even when debug logging is disabled.
-    ///     Set to <see cref="LogLevel.None" /> to suppress stdout entirely from the log.
+    ///     <para>
+    ///         Defaults to <see cref="LogLevel.Debug" />.  The full stdout is still captured into
+    ///         <see cref="ProcessRunResult.Output" /> regardless of this setting, so callers can
+    ///         inspect it even when debug logging is disabled.
+    ///         Set to <see cref="LogLevel.None" /> to suppress stdout entirely from the log.
+    ///     </para>
+    ///     <para>
+    ///         On a non-zero exit, when this level is below <see cref="LogLevel.Information" />,
+    ///         the complete captured stdout is additionally re-logged at
+    ///         <see cref="LogLevel.Information" /> so failure diagnostics remain visible.
+    ///     </para>
     /// </remarks>
     public LogLevel OutputLogLevel { get; init; } = LogLevel.Debug;
 
@@ -68,11 +87,16 @@ public sealed record ProcessRunOptions(string Name, string Args)
     ///     Gets the log level used when streaming each line of the process's standard error.
     /// </summary>
     /// <remarks>
-    ///     Defaults to <see cref="LogLevel.Warning" />.  Like <see cref="OutputLogLevel" />, the
-    ///     full stderr is captured into <see cref="ProcessRunResult.Error" /> irrespective of this
-    ///     value.  On a non-zero exit, stderr is additionally promoted to
-    ///     <see cref="LogLevel.Information" /> or higher when <see cref="ErrorLogLevel" /> is
-    ///     below that threshold.
+    ///     <para>
+    ///         Defaults to <see cref="LogLevel.Warning" />.  Like <see cref="OutputLogLevel" />, the
+    ///         full stderr is captured into <see cref="ProcessRunResult.Error" /> irrespective of
+    ///         this value.
+    ///     </para>
+    ///     <para>
+    ///         On a non-zero exit, when this level is below <see cref="LogLevel.Information" />,
+    ///         the complete captured stderr is additionally re-logged at
+    ///         <see cref="LogLevel.Warning" /> so failure diagnostics remain visible.
+    ///     </para>
     /// </remarks>
     public LogLevel ErrorLogLevel { get; init; } = LogLevel.Warning;
 

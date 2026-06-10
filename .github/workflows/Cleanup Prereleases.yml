@@ -1,0 +1,35 @@
+name: Cleanup Prereleases
+
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease-cleanup-below-version:
+        description: Unlist all prerelease packages below this stable version.
+        required: true
+        type: string
+
+permissions: { }
+
+jobs:
+
+  UnlistOldPrereleases:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10.0.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: UnlistOldPrereleases
+        id: UnlistOldPrereleases
+        run: dotnet run --project _atom/_atom.csproj -- UnlistOldPrereleases --skip --headless
+        env:
+          prerelease-cleanup-below-version: ${{ inputs.prerelease-cleanup-below-version }}
+          nuget-push-api-key: ${{ secrets.NUGET_PUSH_API_KEY }}
+

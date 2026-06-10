@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Atom</RootNamespace>
+    <!-- Build-automation project: generated solution-model code has no XML docs. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,10 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DecSm.Atom.Module.GithubWorkflows" Version="3.0.0-beta.feature-v-next.187" />
-    <PackageReference Include="DecSm.Atom.Module.GitVersion" Version="3.0.0-beta.feature-v-next.187" />
-    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
-    <PackageReference Include="Octokit.GraphQL" Version="0.4.0-beta" />
+    <PackageReference Include="Invex.Atom.Module.GithubWorkflows" Version="3.0.0" />
+    <PackageReference Include="Invex.Atom.Module.GitVersion" Version="3.0.0" />
+    <PackageReference Include="Invex.RepoUtils.Atom.Module" Version="1.3.0" />
   </ItemGroup>
 
   <ItemGroup>

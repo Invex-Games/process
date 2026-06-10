@@ -9,7 +9,8 @@ re-implementing redirection, buffering, and exit-code handling every time.
 
 ## Features
 
-###Sync and async APIs
+### Sync and async APIs
+
 `Run` and `RunAsync` with `CancellationToken` support.
 
 ### Real-time streaming
@@ -150,8 +151,9 @@ var options = new ProcessRunOptions("dotnet", "test")
 };
 ```
 
-> On a non-zero exit (when not allowed to fail), stdout and stderr are promoted to at least
-> `Information`/`Warning` before the exception is thrown, so the failure is visible in the logs.
+> On a non-zero exit, stdout/stderr configured below `Information` are re-logged in full at
+> `Information`/`Warning` respectively, so the failure is visible in the logs even when per-line
+> logging was quiet.
 
 ### Transforming or filtering output
 
@@ -190,4 +192,5 @@ underlying OS process.
 
 ## License
 
-Distributed under the terms described in [LICENSE.txt](LICENSE.txt).
+Distributed under the terms described in
+[LICENSE.txt](https://github.com/Invex-Games/process/blob/main/LICENSE.txt).

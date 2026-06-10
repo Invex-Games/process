@@ -1,4 +1,9 @@
-﻿namespace Atom;
+﻿using Invex.RepoUtils.Atom.Module.Extensions;
+using Invex.RepoUtils.Atom.Module.Helpers;
+using Invex.RepoUtils.Atom.Module.Targets;
+using Invex.StructuredText.GithubActions.DependabotConfigModel.Model;
+
+namespace Atom;
 
 [BuildDefinition]
 [GenerateEntryPoint]
@@ -6,12 +11,14 @@
 internal interface IBuild : IWorkflowBuildDefinition,
     IGithubWorkflows,
     ICheckPrForBreakingChanges,
+    INugetPackageUnlistHelper,
     IApproveDependabotPr,
     IGitVersion,
     IDotnetPackHelper,
     IDotnetTestHelper,
     INugetHelper,
-    IGithubReleaseHelper
+    IGithubReleaseHelper,
+    IDocFxHelper
 {
     [ParamDefinition("test-framework", "Test framework to use for unit tests")]
     string TestFramework => GetParam(() => TestFramework, "net10.0");
@@ -21,6 +28,9 @@ internal interface IBuild : IWorkflowBuildDefinition,
 
     [SecretDefinition("nuget-push-api-key", "The API key to use to push to Nuget.")]
     string NugetApiKey => GetParam(() => NugetApiKey)!;
+
+    [ParamDefinition("prerelease-cleanup-below-version", "Unlist all prerelease packages below this stable version.")]
+    string PrereleaseCleanupBelowVersion => GetParam(() => PrereleaseCleanupBelowVersion)!;
 
     static readonly string[] ProjectsToPack = [Projects.Invex_Process.Name];
 
@@ -32,6 +42,12 @@ internal interface IBuild : IWorkflowBuildDefinition,
         WorkflowLabels.Dotnet.Framework.Net_9_0,
         WorkflowLabels.Dotnet.Framework.Net_10_0,
     ];
+
+    IEnumerable<RootedPath> ICheckPrForBreakingChanges.BreakingChangeFilesToCheck =>
+        RootedFileSystem
+            .Directory
+            .GetFiles(RootedFileSystem.AtomRootDirectory / "tests", "*.verified.txt", SearchOption.AllDirectories)
+            .Select(RootedFileSystem.CreateRootedPath);
 
     IReadOnlyList<IBuildOption> IBuildDefinition.Options =>
     [
@@ -89,6 +105,56 @@ internal interface IBuild : IWorkflowBuildDefinition,
                     await PushProject(project, NugetFeed, NugetApiKey, cancellationToken: cancellationToken);
             });
 
+    Target UnlistSupersededPrereleases =>
+        t => t
+            .DescribedAs("Unlists prerelease packages superseded by the just-published version.")
+            .RequiresParam(nameof(NugetFeed), nameof(NugetApiKey))
+            .ConsumesVariable(nameof(SetupBuildInfo), nameof(BuildVersion))
+            .DependsOn(nameof(PushToNuget))
+            .Executes(async cancellationToken =>
+            {
+                var packages = ProjectsToPack.ToArray();
+
+                if (packages.Length is 0)
+                {
+                    Logger.LogInformation("No packages configured for prerelease unlisting. Skipping.");
+
+                    return;
+                }
+
+                await UnlistSupersededPrereleasesForPackages(NugetFeed,
+                    NugetApiKey,
+                    packages,
+                    BuildVersion,
+                    cancellationToken);
+            });
+
+    Target UnlistOldPrereleases =>
+        t => t
+            .DescribedAs("Unlists all prerelease packages below the configured stable version.")
+            .RequiresParam(nameof(NugetFeed), nameof(NugetApiKey), nameof(PrereleaseCleanupBelowVersion))
+            .Executes(async cancellationToken =>
+            {
+                var packages = ProjectsToPack.ToArray();
+
+                if (packages.Length is 0)
+                {
+                    Logger.LogInformation("No packages configured for prerelease cleanup. Skipping.");
+
+                    return;
+                }
+
+                if (!SemVer.TryParse(PrereleaseCleanupBelowVersion, out var belowVersion))
+                    throw new StepFailedException(
+                        $"'{PrereleaseCleanupBelowVersion}' is not a valid version for {nameof(PrereleaseCleanupBelowVersion)}.");
+
+                await UnlistPrereleasesBelowVersionForPackages(NugetFeed,
+                    NugetApiKey,
+                    packages,
+                    belowVersion,
+                    cancellationToken);
+            });
+
     Target PushToRelease =>
         d => d
             .DescribedAs("Pushes the packages to the release feed.")
@@ -102,6 +168,27 @@ internal interface IBuild : IWorkflowBuildDefinition,
                 foreach (var artifact in ProjectsToPack)
                     await UploadArtifactToRelease(artifact, $"v{BuildVersion}");
             });
+
+    Target BuildDocs =>
+        t => t
+            .DescribedAs("Builds the DocFX documentation.")
+            .ProducesArtifact(GeneratedDocsArtifactName)
+            .Executes(cancellationToken => BuildDocFxDocs(cancellationToken: cancellationToken));
+
+    Target ServeDocs =>
+        t => t
+            .DescribedAs("Serves the DocFX documentation.")
+            .DependsOn(nameof(BuildDocs))
+            .Executes(ServeDocFxDocs);
+
+    Target PublishDocs =>
+        t => t
+            .DescribedAs("Publishes the DocFX documentation to Github Pages.")
+            .RequiresParam(nameof(GithubToken))
+            .ConsumesArtifact(nameof(BuildDocs), GeneratedDocsArtifactName)
+            .DependsOn(nameof(SetupBuildInfo))
+            .Executes(cancellationToken =>
+                PublishDocFxDocsToGithub(GithubToken, GeneratedDocsArtifactName, cancellationToken));
 
     IReadOnlyList<WorkflowDefinition> IWorkflowBuildDefinition.Workflows =>
     [
@@ -144,8 +231,7 @@ internal interface IBuild : IWorkflowBuildDefinition,
                             PullRequests = PermissionsLevel.Write,
                             Checks = PermissionsLevel.Write,
                         })),
-                        BuildOptions.Inject.Param(nameof(PullRequestNumber),
-                            TextExpressions.Github.GithubEvent["number"]),
+                        BuildOptions.Inject.Github.PullRequestNumber,
                         BuildOptions.Target.RunIfWorkflowCondition(
                             TextExpressions.Github.GithubEventName.EqualToString("pull_request")),
                     ],
@@ -190,6 +276,22 @@ internal interface IBuild : IWorkflowBuildDefinition,
                         BuildOptions.Inject.Secret(nameof(GithubToken)),
                         new GithubTokenPermissionsOption(new Permissions.Exact(new()
                         {
+                            Contents = PermissionsLevel.Write
+                        })),
+                        BuildOptions.Target.RunIfWorkflowCondition(TextExpressions
+                            .Target
+                            .ParamOutput(this, nameof(SetupBuildInfo), nameof(BuildVersion))
+                            .Contains("-")
+                            .EqualTo(false))
+                    ]
+                },
+                new(nameof(PublishDocs))
+                {
+                    Options =
+                    [
+                        BuildOptions.Inject.Secret(nameof(GithubToken)),
+                        new GithubTokenPermissionsOption(new Permissions.Exact(new()
+                        {
                             Contents = PermissionsLevel.Write,
                         })),
                         BuildOptions.Target.RunIfWorkflowCondition(TextExpressions
@@ -211,17 +313,30 @@ internal interface IBuild : IWorkflowBuildDefinition,
                 {
                     Options =
                     [
-                        BuildOptions.Inject.Secret(nameof(GithubToken)),
-                        BuildOptions.Inject.Param(nameof(PullRequestNumber),
-                            TextExpressions.Github.GithubEvent["number"]),
+                        BuildOptions.Inject.Github.PullRequestNumber,
+                        BuildOptions.Inject.Github.DependabotEnableAutoMergePat,
                         BuildOptions.Target.RunIfWorkflowCondition(
                             TextExpressions.Github.GithubActor.EqualToString("dependabot[bot]")),
-                        new GithubTokenPermissionsOption(new Permissions.Exact(new()
-                        {
-                            IdTokens = PermissionsLevel.Write,
-                            Contents = PermissionsLevel.Write,
-                            PullRequests = PermissionsLevel.Write,
-                        })),
+                    ]
+                }
+            ],
+            Types = [WorkflowTypes.Github.Action]
+        },
+        new("Cleanup Prereleases")
+        {
+            Triggers =
+            [
+                WorkflowTriggers.ManualWithInputs(
+                    ManualStringInput.ForParam(ParamDefinitions[nameof(PrereleaseCleanupBelowVersion)]))
+            ],
+            Targets =
+            [
+                new(nameof(UnlistOldPrereleases))
+                {
+                    Options =
+                    [
+                        BuildOptions.Target.SuppressArtifactPublishing,
+                        BuildOptions.Inject.Secret(nameof(NugetApiKey))
                     ],
                 },
             ],
