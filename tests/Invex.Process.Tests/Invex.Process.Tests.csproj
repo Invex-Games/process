@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <!-- Tests are not a shipped API surface; XML docs are not required. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

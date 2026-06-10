@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "src/Invex.Process/Invex.Process.csproj"
+          ]
+        }
+      ],
+      "dest": "api",
+      "properties": {
+        "TargetFramework": "net10.0"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "toc.yml",
+          "index.md",
+          "README.md"
+        ]
+      },
+      {
+        "files": [
+          "api/**.yml",
+          "api/toc.yml",
+          "api/index.md",
+          "api/SemVer.md"
+        ]
+      },
+      {
+        "files": [
+          "docs/toc.yml",
+          "docs/**/*.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "globalMetadataFiles": [],
+    "fileMetadataFiles": [],
+    "globalMetadata": {
+      "_appTitle": "Invex.Process",
+      "_appName": "Invex.Process",
+      "_appFooter": "Invex.Process — a process runner library for .NET",
+      "_enableSearch": true,
+      "_disableContribution": false,
+      "_disableToc": false,
+      "_gitContribute": {
+        "repo": "https://github.com/Invex-Games/process",
+        "branch": "main"
+      }
+    },
+    "template": [
+      "default",
+      "modern"
+    ],
+    "postProcessors": [],
+    "keepFileLink": false,
+    "disableGitFeatures": false
+  }
+}
+
+
