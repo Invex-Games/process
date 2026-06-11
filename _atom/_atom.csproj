@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Invex.Atom.Module.GithubWorkflows" Version="3.0.0" />
     <PackageReference Include="Invex.Atom.Module.GitVersion" Version="3.0.0" />
-    <PackageReference Include="Invex.RepoUtils.Atom.Module" Version="1.4.0" />
+    <PackageReference Include="Invex.RepoUtils.Atom.Module" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>
