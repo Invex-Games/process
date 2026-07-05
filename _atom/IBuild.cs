@@ -377,7 +377,10 @@ internal interface IBuild : IWorkflowBuildDefinition,
                     },
                     Schedule = new()
                     {
-                        Interval = ScheduleInterval.Daily,
+                        Interval = ScheduleInterval.Weekly,
+                        Day = ScheduleDay.Saturday,
+                        Time = "00:00",
+                        Timezone = "Australia/Brisbane",
                     },
                     TargetBranch = "main",
                     OpenPullRequestsLimit = 10,
