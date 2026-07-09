@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../images/icon.png" Pack="true" PackagePath="\" />
-    <None Include="../readme.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Invex.Atom.Module.GithubWorkflows" Version="3.3.0" />
     <PackageReference Include="Invex.Atom.Module.GitVersion" Version="3.3.0" />
     <PackageReference Include="Invex.RepoUtils.Atom.Module" Version="1.5.0" />
