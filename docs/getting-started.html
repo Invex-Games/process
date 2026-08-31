@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Getting Started | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Getting Started | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/getting-started.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="getting-started">Getting Started</h1>
+
+<h2 id="installation">Installation</h2>
+<pre><code class="lang-shell">dotnet add package Invex.Process
+</code></pre>
+<p>The package targets <code>net8.0</code>, <code>net9.0</code>, and <code>net10.0</code>.</p>
+<h2 id="register-the-service">Register the service</h2>
+<p>Add the process runner to your dependency injection container once during host setup:</p>
+<pre><code class="lang-csharp">using Invex.Process;
+using Microsoft.Extensions.Hosting;
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.Services.AddProcessRunner();
+</code></pre>
+<p><code>AddProcessRunner()</code> registers <code>IProcessRunner</code> as a <strong>singleton</strong>. The runner is stateless, so a
+single instance can safely serve concurrent callers.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The runner logs through <code>ILogger&lt;ProcessRunner&gt;</code>, so make sure logging is configured on the host
+(it is by default with <code>Host.CreateApplicationBuilder</code>).</p>
+</div>
+<h2 id="run-your-first-process">Run your first process</h2>
+<p>Inject <code>IProcessRunner</code> and call <code>RunAsync</code> (or the synchronous <code>Run</code>):</p>
+<pre><code class="lang-csharp">using Invex.Process;
+
+public sealed class VersionReporter(IProcessRunner processRunner)
+{
+    public async Task&lt;string&gt; GetDotnetVersionAsync(CancellationToken cancellationToken)
+    {
+        var result = await processRunner.RunAsync(
+            new ProcessRunOptions(&quot;dotnet&quot;, &quot;--version&quot;),
+            cancellationToken);
+
+        return result.Output.Trim();
+    }
+}
+</code></pre>
+<p>When this runs you'll see log entries like:</p>
+<pre><code class="lang-text">info: Invex.Process.ProcessRunner[0]
+      Run: dotnet --version
+dbug: Invex.Process.ProcessRunner[0]
+      10.0.100
+</code></pre>
+<h2 id="what-you-get-back">What you get back</h2>
+<p>Both <code>Run</code> and <code>RunAsync</code> return a <code>ProcessRunResult</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ExitCode</code></td>
+<td>The process exit code. Zero unless <code>AllowFailedResult</code> was set (a non-zero code otherwise throws).</td>
+</tr>
+<tr>
+<td><code>Output</code></td>
+<td>The complete captured stdout, one line per <code>Environment.NewLine</code>.</td>
+</tr>
+<tr>
+<td><code>Error</code></td>
+<td>The complete captured stderr.</td>
+</tr>
+<tr>
+<td><code>RunOptions</code></td>
+<td>The options the process was started with.</td>
+</tr>
+</tbody>
+</table>
+<p>The output is <em>always</em> fully captured — even if you turn logging down or off entirely.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="running-processes.html">Running Processes</a> — arguments, working directories, environment variables.</li>
+<li><a href="handling-failures.html">Handling Failures</a> — what happens when the exit code isn't zero.</li>
+<li><a href="logging.html">Logging</a> — tune how invocations and output are logged.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/getting-started.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Transforming Output | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Transforming Output | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/transforming-output.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="transforming-output">Transforming Output</h1>
+
+<p><code>ProcessRunOptions.TransformOutput</code> and <code>ProcessRunOptions.TransformError</code> are optional per-line
+hooks applied to stdout and stderr respectively, <em>before</em> each line is logged and captured.</p>
+<p>Each delegate has the shape <code>Func&lt;string, string?&gt;</code>:</p>
+<ul>
+<li>It receives the raw line (never <code>null</code> — null data events are filtered out beforehand).</li>
+<li>Return the same string to pass the line through unchanged.</li>
+<li>Return a different string to rewrite the line.</li>
+<li>Return <code>null</code> to <strong>suppress</strong> the line entirely — it is neither logged nor included in
+<code>ProcessRunResult.Output</code> / <code>ProcessRunResult.Error</code>.</li>
+</ul>
+<h2 id="redacting-secrets">Redacting secrets</h2>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;deploy&quot;, &quot;--token &quot; + token)
+{
+    TransformOutput = line =&gt; line.Contains(token)
+        ? line.Replace(token, &quot;[redacted]&quot;)
+        : line,
+};
+</code></pre>
+<p>The redaction applies to both the live log stream <em>and</em> the captured <code>result.Output</code>, so the secret
+never leaves the process boundary in either form.</p>
+<h2 id="filtering-noise">Filtering noise</h2>
+<p>Drop high-volume progress lines that would otherwise flood the logs and the captured output:</p>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;docker&quot;, &quot;build .&quot;)
+{
+    TransformError = line =&gt; line.StartsWith(&quot;#&quot;) || line.Contains(&quot;DONE&quot;)
+        ? null   // suppressed: not logged, not captured
+        : line,
+};
+</code></pre>
+<h2 id="normalizing-output">Normalizing output</h2>
+<p>Transforms can also reshape lines for downstream parsing:</p>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;git&quot;, &quot;status --porcelain&quot;)
+{
+    TransformOutput = line =&gt; line.TrimEnd(),
+};
+</code></pre>
+<h2 id="behavior-notes">Behavior notes</h2>
+<ul>
+<li>Transforms run on the process's output-reader callbacks, once per line, as lines arrive.
+Keep them fast and side-effect-free.</li>
+<li>A suppressed line is excluded from failure promotion too — if the process fails, the re-logged
+&quot;full output&quot; is the <em>captured</em> (post-transform) output.</li>
+<li>Transforms are per-invocation. For a shared policy, build a helper that returns pre-configured
+<code>ProcessRunOptions</code> instances, or wrap the delegate in a reusable method.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/transforming-output.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

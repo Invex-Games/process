@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Invex.Process | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Invex.Process | Invex.Process ">
+      
+      
+      <link rel="icon" href="favicon.ico">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/README.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="invexprocess">Invex.Process</h1>
+
+<p>A small, focused .NET library for running external processes with first-class logging, real-time
+output streaming, full output capture, and fail-fast error handling.</p>
+<p>It wraps <code>System.Diagnostics.Process</code> behind a clean, injectable <code>IProcessRunner</code> abstraction so your
+build targets, tools, and services can shell out to executables (<code>dotnet</code>, <code>git</code>, <code>npm</code>, …) without
+re-implementing redirection, buffering, and exit-code handling every time.</p>
+<h2 id="features">Features</h2>
+<h3 id="sync-and-async-apis">Sync and async APIs</h3>
+<p><code>Run</code> and <code>RunAsync</code> with <code>CancellationToken</code> support.</p>
+<h3 id="real-time-streaming">Real-time streaming</h3>
+<p>Stdout and stderr are read asynchronously and logged line-by-line as the
+process runs, instead of being buffered until exit.</p>
+<h3 id="full-output-capture">Full output capture</h3>
+<p>Complete stdout/stderr are always captured into the result, regardless of
+log level, so you can inspect them even when logging is suppressed.</p>
+<h3 id="fail-fast-by-default">Fail-fast by default</h3>
+<p>A non-zero exit code throws a descriptive exception (including command,
+exit code, working directory, and stderr), or opt in to inspect failures yourself.</p>
+<h3 id="configurable-log-levels">Configurable log levels</h3>
+<p>Control how the invocation, stdout, and stderr are logged.</p>
+<h3 id="per-line-transforms">Per-line transforms</h3>
+<p>Rewrite or suppress individual output/error lines (e.g. to redact secrets
+or filter noisy progress output).</p>
+<h3 id="working-directory--environment-variables">Working directory &amp; environment variables</h3>
+<p>Run from any directory and inject or remove
+environment variables per invocation.</p>
+<h3 id="di-ready">DI-ready</h3>
+<p>Register once with <code>AddProcessRunner()</code> and inject <code>IProcessRunner</code> anywhere.</p>
+<h2 id="installation">Installation</h2>
+<pre><code class="lang-shell">dotnet add package Invex.Process
+</code></pre>
+<p>Targets <code>net8.0</code>, <code>net9.0</code>, and <code>net10.0</code>.</p>
+<h2 id="getting-started">Getting started</h2>
+<p>Register the process runner with your dependency injection container:</p>
+<pre><code class="lang-csharp">using Invex.Process;
+using Microsoft.Extensions.DependencyInjection;
+
+services.AddProcessRunner();
+</code></pre>
+<p>Then inject <code>IProcessRunner</code> and run a process:</p>
+<pre><code class="lang-csharp">using Invex.Process;
+
+public sealed class VersionReporter(IProcessRunner processRunner)
+{
+    public async Task&lt;string&gt; GetDotnetVersionAsync(CancellationToken cancellationToken)
+    {
+        var result = await processRunner.RunAsync(
+            new ProcessRunOptions(&quot;dotnet&quot;, &quot;--version&quot;),
+            cancellationToken);
+
+        return result.Output.Trim();
+    }
+}
+</code></pre>
+<h2 id="usage">Usage</h2>
+<h3 id="passing-arguments">Passing arguments</h3>
+<p>Arguments can be supplied as a single pre-joined string or as an array of tokens. When using an array,
+empty and whitespace-only entries are removed before joining, which makes optional arguments easy:</p>
+<pre><code class="lang-csharp">// As a single string
+var options = new ProcessRunOptions(&quot;git&quot;, &quot;status --short&quot;);
+
+// As tokens — empty entries are stripped automatically
+var verbose = true;
+var options2 = new ProcessRunOptions(&quot;git&quot;, [&quot;status&quot;, &quot;--short&quot;, verbose ? &quot;--verbose&quot; : &quot;&quot;]);
+</code></pre>
+<h3 id="handling-failures">Handling failures</h3>
+<p>By default, a non-zero exit code throws with a detailed message:</p>
+<pre><code class="lang-csharp">// Throws if the build fails — the exception includes the command, exit code, and stderr.
+processRunner.Run(new ProcessRunOptions(&quot;dotnet&quot;, &quot;build --configuration Release&quot;));
+</code></pre>
+<p>Set <code>AllowFailedResult</code> to inspect the result yourself instead of throwing:</p>
+<pre><code class="lang-csharp">var result = processRunner.Run(new ProcessRunOptions(&quot;dotnet&quot;, &quot;format --verify-no-changes&quot;)
+{
+    AllowFailedResult = true,
+});
+
+if (result.ExitCode != 0)
+{
+    // Decide what to do with the failure...
+}
+</code></pre>
+<h3 id="working-directory-and-environment-variables">Working directory and environment variables</h3>
+<pre><code class="lang-csharp">var result = processRunner.Run(new ProcessRunOptions(&quot;npm&quot;, &quot;ci&quot;)
+{
+    WorkingDirectory = &quot;/repo/frontend&quot;,
+    EnvironmentVariables =
+    {
+        [&quot;NODE_ENV&quot;] = &quot;production&quot;,
+        [&quot;CI&quot;] = &quot;true&quot;,
+        [&quot;NPM_TOKEN&quot;] = null, // a null value removes the inherited variable
+    },
+});
+</code></pre>
+<h3 id="controlling-logging">Controlling logging</h3>
+<p>Each invocation can tune how it is logged. The full output is still captured in the result regardless
+of these settings:</p>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;dotnet&quot;, &quot;test&quot;)
+{
+    InvocationLogLevel = LogLevel.Debug,   // the &quot;Run: dotnet test&quot; line
+    OutputLogLevel = LogLevel.Information, // each stdout line
+    ErrorLogLevel = LogLevel.Error,        // each stderr line
+};
+</code></pre>
+<blockquote>
+<p>On a non-zero exit, stdout/stderr configured below <code>Information</code> are re-logged in full at
+<code>Information</code>/<code>Warning</code> respectively, so the failure is visible in the logs even when per-line
+logging was quiet.</p>
+</blockquote>
+<h3 id="transforming-or-filtering-output">Transforming or filtering output</h3>
+<p><code>TransformOutput</code> and <code>TransformError</code> are applied to each line before it is logged and captured.
+Returning <code>null</code> suppresses the line entirely:</p>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;deploy&quot;, &quot;--token secret&quot;)
+{
+    // Redact secrets from logs and captured output
+    TransformOutput = line =&gt; line.Contains(&quot;token&quot;)
+        ? &quot;[redacted]&quot;
+        : line,
+
+    // Drop noisy progress lines completely
+    TransformError = line =&gt; line.StartsWith(&quot;progress:&quot;)
+        ? null
+        : line,
+};
+</code></pre>
+<h2 id="api-overview">API overview</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IProcessRunner</code></td>
+<td>Injectable service with <code>Run</code> and <code>RunAsync</code> methods. Registered as a singleton.</td>
+</tr>
+<tr>
+<td><code>ProcessRunOptions</code></td>
+<td>Immutable record configuring a single execution (name, args, working directory, env vars, log levels, transforms, failure handling).</td>
+</tr>
+<tr>
+<td><code>ProcessRunResult</code></td>
+<td>Result record exposing <code>ExitCode</code>, captured <code>Output</code>, captured <code>Error</code>, and the originating <code>RunOptions</code>.</td>
+</tr>
+<tr>
+<td><code>AddProcessRunner()</code></td>
+<td><code>IServiceCollection</code> extension that registers <code>IProcessRunner</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cancellation">Cancellation</h2>
+<p><code>RunAsync</code> accepts a <code>CancellationToken</code> that cancels the wait for the process to exit and throws
+<code>OperationCanceledException</code>. Note that cancelling the token aborts the wait but does <strong>not</strong> kill the
+underlying OS process.</p>
+<h2 id="license">License</h2>
+<p>Distributed under the terms described in
+<a href="https://github.com/Invex-Games/process/blob/main/LICENSE.txt">LICENSE.txt</a>.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/README.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

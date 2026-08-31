@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Logging | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Logging | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/logging.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="logging">Logging</h1>
+
+<p>The runner logs through the standard <code>Microsoft.Extensions.Logging</code> abstractions
+(<code>ILogger&lt;ProcessRunner&gt;</code>), so output flows to whatever providers your host configures — console,
+Application Insights, Serilog, etc.</p>
+<h2 id="what-gets-logged">What gets logged</h2>
+<p>Each invocation produces three kinds of log entries:</p>
+<ol>
+<li><p><strong>The invocation line</strong> — logged once when the process starts:</p>
+<pre><code class="lang-text">Run: dotnet build --configuration Release in /repo/src with env CI=true
+</code></pre>
+<p>The working directory and environment variables are included only when set.</p>
+</li>
+<li><p><strong>Output lines</strong> — each stdout line, streamed in real time as the process runs.</p>
+</li>
+<li><p><strong>Error lines</strong> — each stderr line, streamed in real time.</p>
+</li>
+</ol>
+<h2 id="tuning-log-levels">Tuning log levels</h2>
+<p>All three are configurable per invocation via <code>ProcessRunOptions</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Default</th>
+<th>Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InvocationLogLevel</code></td>
+<td><code>Information</code></td>
+<td>The <code>Run: …</code> line.</td>
+</tr>
+<tr>
+<td><code>OutputLogLevel</code></td>
+<td><code>Debug</code></td>
+<td>Each stdout line.</td>
+</tr>
+<tr>
+<td><code>ErrorLogLevel</code></td>
+<td><code>Warning</code></td>
+<td>Each stderr line.</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-csharp">var options = new ProcessRunOptions(&quot;dotnet&quot;, &quot;test&quot;)
+{
+    InvocationLogLevel = LogLevel.Debug,   // quieter invocation line
+    OutputLogLevel = LogLevel.Information, // show test output at info
+    ErrorLogLevel = LogLevel.Error,        // treat stderr lines as errors
+};
+</code></pre>
+<p>Use <code>LogLevel.None</code> to suppress a stream from the log entirely.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Log levels only affect <em>logging</em>. The full stdout and stderr are always captured into
+<code>ProcessRunResult.Output</code> / <code>ProcessRunResult.Error</code> regardless of these settings.</p>
+</div>
+<h2 id="failure-promotion">Failure promotion</h2>
+<p>When a process exits non-zero, quiet output is automatically promoted so the failure is
+diagnosable from the logs:</p>
+<ul>
+<li>stdout configured below <code>Information</code> → re-logged in full at <code>Information</code>;</li>
+<li>stderr configured below <code>Information</code> → re-logged in full at <code>Warning</code>.</li>
+</ul>
+<p>This happens before the exception is thrown (and also when <code>AllowFailedResult</code> tolerates the
+failure). The common pattern is therefore:</p>
+<ul>
+<li>Leave <code>OutputLogLevel</code> at <code>Debug</code> so successful runs are quiet.</li>
+<li>Rely on promotion to surface the full output automatically when something fails.</li>
+</ul>
+<h2 id="secrets-in-logs">Secrets in logs</h2>
+<p>Two things to watch:</p>
+<ul>
+<li>The <strong>invocation line</strong> includes the command arguments and any environment variables you set.
+Avoid passing secrets as plain arguments/variables, or lower <code>InvocationLogLevel</code>.</li>
+<li><strong>Output lines</strong> may echo secrets printed by the tool. Use <code>TransformOutput</code> /
+<code>TransformError</code> to redact or suppress them — see
+<a href="transforming-output.html">Transforming Output</a>.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/logging.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

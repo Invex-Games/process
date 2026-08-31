@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Running Processes | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Running Processes | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/running-processes.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="running-processes">Running Processes</h1>
+
+<p>Every invocation is described by a single immutable <code>ProcessRunOptions</code> record. This page covers
+the core execution options; failure handling and logging have their own pages.</p>
+<h2 id="sync-or-async">Sync or async</h2>
+<p><code>IProcessRunner</code> exposes two methods:</p>
+<pre><code class="lang-csharp">// Blocks the calling thread until the process exits.
+ProcessRunResult Run(ProcessRunOptions options);
+
+// Awaits process exit; supports cancellation.
+Task&lt;ProcessRunResult&gt; RunAsync(ProcessRunOptions options, CancellationToken cancellationToken = default);
+</code></pre>
+<p>Both behave identically apart from threading: same logging, same capture, same failure handling.
+Prefer <code>RunAsync</code> in async code paths and anywhere you want cancellation support (see
+<a href="cancellation.html">Cancellation</a>).</p>
+<h2 id="passing-arguments">Passing arguments</h2>
+<p>Arguments can be supplied as a single pre-joined string or as an array of tokens:</p>
+<pre><code class="lang-csharp">// As a single string
+var options = new ProcessRunOptions(&quot;git&quot;, &quot;status --short&quot;);
+
+// As tokens
+var options2 = new ProcessRunOptions(&quot;git&quot;, [&quot;status&quot;, &quot;--short&quot;]);
+</code></pre>
+<p>When using the array form, empty and whitespace-only entries are removed before joining. This makes
+conditional arguments clean — no spurious double spaces:</p>
+<pre><code class="lang-csharp">var verbose = ShouldBeVerbose();
+
+var options = new ProcessRunOptions(&quot;git&quot;,
+[
+    &quot;status&quot;,
+    &quot;--short&quot;,
+    verbose ? &quot;--verbose&quot; : &quot;&quot;,   // dropped entirely when empty
+]);
+</code></pre>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Arguments are ultimately passed to the OS as a single string
+(<code>ProcessStartInfo.Arguments</code>). If an argument value can contain spaces or special characters
+(e.g. a user-supplied file path), quote it yourself: <code>$&quot;\&quot;{path}\&quot;&quot;</code>.</p>
+</div>
+<h2 id="working-directory">Working directory</h2>
+<p>By default the child process inherits the current process's working directory. Set
+<code>WorkingDirectory</code> to run a tool from a specific location:</p>
+<pre><code class="lang-csharp">var result = processRunner.Run(new ProcessRunOptions(&quot;npm&quot;, &quot;ci&quot;)
+{
+    WorkingDirectory = &quot;/repo/frontend&quot;,
+});
+</code></pre>
+<h2 id="environment-variables">Environment variables</h2>
+<p><code>EnvironmentVariables</code> lets you add, override, or remove variables for the child process. Variables
+you don't list are inherited unchanged from the current process:</p>
+<pre><code class="lang-csharp">var result = processRunner.Run(new ProcessRunOptions(&quot;npm&quot;, &quot;ci&quot;)
+{
+    EnvironmentVariables =
+    {
+        [&quot;NODE_ENV&quot;] = &quot;production&quot;,  // add or override
+        [&quot;CI&quot;] = &quot;true&quot;,
+        [&quot;NPM_TOKEN&quot;] = null,         // a null value removes the inherited variable
+    },
+});
+</code></pre>
+<p>The invocation log line includes the variables you set, so be careful not to put secrets in values
+you don't want logged (or lower <code>InvocationLogLevel</code> — see <a href="logging.html">Logging</a>).</p>
+<h2 id="reusing-and-varying-options">Reusing and varying options</h2>
+<p><code>ProcessRunOptions</code> is a record, so you can keep a baseline and vary it with <code>with</code>:</p>
+<pre><code class="lang-csharp">var git = new ProcessRunOptions(&quot;git&quot;, &quot;&quot;)
+{
+    WorkingDirectory = repoRoot,
+    InvocationLogLevel = LogLevel.Debug,
+};
+
+var status = git with { Args = &quot;status --short&quot; };
+var fetch  = git with { Args = &quot;fetch --prune&quot; };
+</code></pre>
+<h2 id="concurrency">Concurrency</h2>
+<p><code>IProcessRunner</code> is stateless and registered as a singleton — it is safe to run multiple processes
+concurrently from multiple threads.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/running-processes.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

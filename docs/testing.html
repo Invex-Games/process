@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Testing Your Code | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Testing Your Code | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/testing.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="testing-your-code">Testing Your Code</h1>
+
+<p>Because your code depends on the <code>IProcessRunner</code> <em>interface</em>, unit tests never have to start real
+processes. Fake the interface, return canned <code>ProcessRunResult</code> instances, and assert on the
+options your code passed in.</p>
+<p>The examples below use <a href="https://fakeiteasy.github.io/">FakeItEasy</a>, but any mocking library (or a
+hand-rolled fake) works the same way.</p>
+<h2 id="returning-a-canned-result">Returning a canned result</h2>
+<pre><code class="lang-csharp">[Test]
+public async Task GetDotnetVersion_returns_trimmed_output()
+{
+    var processRunner = A.Fake&lt;IProcessRunner&gt;();
+
+    A.CallTo(() =&gt; processRunner.RunAsync(A&lt;ProcessRunOptions&gt;._, A&lt;CancellationToken&gt;._))
+        .ReturnsLazily((ProcessRunOptions options, CancellationToken _) =&gt;
+            new ProcessRunResult(options, 0, &quot;10.0.100\n&quot;, &quot;&quot;));
+
+    var reporter = new VersionReporter(processRunner);
+
+    var version = await reporter.GetDotnetVersionAsync(CancellationToken.None);
+
+    Assert.That(version, Is.EqualTo(&quot;10.0.100&quot;));
+}
+</code></pre>
+<h2 id="asserting-on-the-invocation">Asserting on the invocation</h2>
+<p><code>ProcessRunOptions</code> is a record, so captured options are easy to inspect:</p>
+<pre><code class="lang-csharp">[Test]
+public async Task Build_runs_dotnet_in_the_project_directory()
+{
+    var processRunner = A.Fake&lt;IProcessRunner&gt;();
+    ProcessRunOptions? captured = null;
+
+    A.CallTo(() =&gt; processRunner.RunAsync(A&lt;ProcessRunOptions&gt;._, A&lt;CancellationToken&gt;._))
+        .Invokes((ProcessRunOptions options, CancellationToken _) =&gt; captured = options)
+        .ReturnsLazily((ProcessRunOptions options, CancellationToken _) =&gt;
+            new ProcessRunResult(options, 0, &quot;&quot;, &quot;&quot;));
+
+    await new Builder(processRunner).BuildAsync(&quot;/repo/src/App&quot;, CancellationToken.None);
+
+    Assert.That(captured!.Name, Is.EqualTo(&quot;dotnet&quot;));
+    Assert.That(captured.Args, Does.Contain(&quot;build&quot;));
+    Assert.That(captured.WorkingDirectory, Is.EqualTo(&quot;/repo/src/App&quot;));
+}
+</code></pre>
+<h2 id="simulating-failure">Simulating failure</h2>
+<p>To test failure-handling paths, either return a non-zero result (for code using
+<code>AllowFailedResult</code>) or have the fake throw (mirroring the default fail-fast behavior):</p>
+<pre><code class="lang-csharp">// Code under test sets AllowFailedResult and inspects ExitCode:
+A.CallTo(() =&gt; processRunner.RunAsync(A&lt;ProcessRunOptions&gt;._, A&lt;CancellationToken&gt;._))
+    .ReturnsLazily((ProcessRunOptions options, CancellationToken _) =&gt;
+        new ProcessRunResult(options, 1, &quot;&quot;, &quot;fatal: not a git repository&quot;));
+
+// Code under test relies on the default throwing behavior:
+A.CallTo(() =&gt; processRunner.RunAsync(A&lt;ProcessRunOptions&gt;._, A&lt;CancellationToken&gt;._))
+    .Throws(new Exception(&quot;Process 'git' failed with exit code 128&quot;));
+</code></pre>
+<h2 id="tips">Tips</h2>
+<ul>
+<li><strong>Don't fake what you don't own in integration tests.</strong> For end-to-end confidence, run a real,
+harmless executable (e.g. <code>dotnet --version</code>) against the real runner registered via
+<code>AddProcessRunner()</code>.</li>
+<li><strong>Keep options construction in testable seams.</strong> If a class builds complex
+<code>ProcessRunOptions</code>, consider exposing that construction through an internal method you can
+assert on directly.</li>
+<li><strong>Remember the contract:</strong> with default options, your code only ever sees results with
+<code>ExitCode == 0</code>; non-zero exits arrive as exceptions.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/testing.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

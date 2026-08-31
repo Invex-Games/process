@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Introduction | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Introduction | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/docs/introduction.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="introduction">Introduction</h1>
+
+<p><strong>Invex.Process</strong> is a small, focused .NET library for running external processes with
+first-class logging, real-time output streaming, full output capture, and fail-fast error
+handling.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Shelling out to external tools (<code>dotnet</code>, <code>git</code>, <code>npm</code>, <code>docker</code>, …) from .NET code with the raw
+<code>System.Diagnostics.Process</code> API requires a surprising amount of boilerplate to get right:</p>
+<ul>
+<li>Redirecting stdout and stderr and wiring up asynchronous read loops so long-running processes
+don't deadlock on full pipe buffers.</li>
+<li>Accumulating output for later inspection while <em>also</em> surfacing it live in logs.</li>
+<li>Checking exit codes and producing useful error messages when something fails.</li>
+<li>Plumbing in working directories and environment variables.</li>
+<li>Doing all of the above consistently across every call site.</li>
+</ul>
+<p>Most codebases end up with a half-dozen subtly different copies of this logic.</p>
+<h2 id="the-solution">The solution</h2>
+<p>Invex.Process wraps all of this behind a single injectable abstraction:</p>
+<pre><code class="lang-csharp">var result = await processRunner.RunAsync(
+    new ProcessRunOptions(&quot;git&quot;, &quot;rev-parse HEAD&quot;),
+    cancellationToken);
+
+var commitSha = result.Output.Trim();
+</code></pre>
+<p>One line of registration (<code>services.AddProcessRunner()</code>), one options record describing <em>what</em> to
+run, one result record telling you <em>what happened</em> — and consistent logging and error handling
+everywhere.</p>
+<h2 id="design-principles">Design principles</h2>
+<ul>
+<li><strong>Fail fast by default.</strong> A non-zero exit code throws a descriptive exception that includes the
+command line, exit code, working directory, and captured stderr. Opt out per-invocation with
+<code>AllowFailedResult</code> when you want to handle failures yourself.</li>
+<li><strong>Never lose output.</strong> Full stdout and stderr are always captured into the result, regardless of
+how (or whether) they were logged.</li>
+<li><strong>Stream, don't buffer.</strong> Output is logged line-by-line in real time, so long-running processes
+show progress as they go.</li>
+<li><strong>Stay testable.</strong> Your code depends on the <code>IProcessRunner</code> interface, which is trivial to fake
+in unit tests — no real processes needed.</li>
+</ul>
+<h2 id="library-shape">Library shape</h2>
+<p>The entire public surface is four types in one namespace (<code>Invex.Process</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IProcessRunner</code></td>
+<td>The service you inject: <code>Run(options)</code> / <code>RunAsync(options, ct)</code>.</td>
+</tr>
+<tr>
+<td><code>ProcessRunOptions</code></td>
+<td>Immutable record describing one invocation.</td>
+</tr>
+<tr>
+<td><code>ProcessRunResult</code></td>
+<td>Immutable record describing the outcome.</td>
+</tr>
+<tr>
+<td><code>ProcessHostExtensions</code></td>
+<td><code>AddProcessRunner()</code> DI registration.</td>
+</tr>
+</tbody>
+</table>
+<p>Continue with <a href="getting-started.html">Getting Started</a>.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/docs/introduction.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process — a process runner library for .NET
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

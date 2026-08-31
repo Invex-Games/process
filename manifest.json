@@ -1,0 +1,258 @@
+{
+  "source_base_path": "/home/runner/work/process/process",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "README.md",
+      "output": {
+        ".html": {
+          "relative_path": "README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Invex.Process.IProcessRunner.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Invex.Process.IProcessRunner.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Invex.Process.IProcessRunner",
+      "Summary": "<p sourcefile=\"api/Invex.Process.IProcessRunner.yml\" sourcestartlinenumber=\"1\">Defines a service for executing external processes with comprehensive logging, output\ncapture, and error handling.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Invex.Process.ProcessHostExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Invex.Process.ProcessHostExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Invex.Process.ProcessHostExtensions",
+      "Summary": "<p sourcefile=\"api/Invex.Process.ProcessHostExtensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods for registering the process runner service with an\n<xref href=\"Microsoft.Extensions.DependencyInjection.IServiceCollection\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Invex.Process.ProcessRunOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Invex.Process.ProcessRunOptions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Invex.Process.ProcessRunOptions",
+      "Summary": "<p sourcefile=\"api/Invex.Process.ProcessRunOptions.yml\" sourcestartlinenumber=\"1\">Immutable configuration for a single external-process execution through\n<xref href=\"Invex.Process.IProcessRunner\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Invex.Process.ProcessRunResult.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Invex.Process.ProcessRunResult.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Invex.Process.ProcessRunResult",
+      "Summary": "<p sourcefile=\"api/Invex.Process.ProcessRunResult.yml\" sourcestartlinenumber=\"1\">Represents the result of a completed external-process execution.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Invex.Process.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Invex.Process.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Invex.Process",
+      "Summary": null
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "api/SemVer.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/SemVer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "api/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".json": {
+          "relative_path": "api/toc.json"
+        },
+        ".html": {
+          "relative_path": "api/toc.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/cancellation.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/cancellation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/getting-started.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/getting-started.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/handling-failures.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/handling-failures.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/introduction.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/introduction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/logging.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/logging.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/running-processes.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/running-processes.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/testing.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/testing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "docs/toc.yml",
+      "output": {
+        ".json": {
+          "relative_path": "docs/toc.json"
+        },
+        ".html": {
+          "relative_path": "docs/toc.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docs/transforming-output.md",
+      "output": {
+        ".html": {
+          "relative_path": "docs/transforming-output.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/icon.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/icon.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".json": {
+          "relative_path": "toc.json"
+        },
+        ".html": {
+          "relative_path": "toc.html"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
