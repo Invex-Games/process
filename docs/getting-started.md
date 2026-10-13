@@ -6,7 +6,7 @@
 dotnet add package Invex.Process
 ```
 
-The package targets `net8.0`, `net9.0`, and `net10.0`.
+The package targets `net10.0`.
 
 ## Register the service
 

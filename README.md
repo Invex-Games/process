@@ -52,7 +52,7 @@ Register once with `AddProcessRunner()` and inject `IProcessRunner` anywhere.
 dotnet add package Invex.Process
 ```
 
-Targets `net8.0`, `net9.0`, and `net10.0`.
+Targets `net10.0`.
 
 ## Getting started
 

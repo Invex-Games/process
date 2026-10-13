@@ -1,4 +1,4 @@
-# Copilot Instructions
+# Agent Instructions
 
 Guidance for AI agents working in **Invex.Process** — a small, focused C# library for running
 external processes with first-class logging, real-time output streaming, full output capture, and
@@ -8,8 +8,8 @@ fail-fast error handling. Keep changes focused and defer to the linked docs for 
 
 | Project | Role | Target frameworks |
 |---------|------|-------------------|
-| `Invex.Process` | The library: `IProcessRunner` / `ProcessRunner`, `ProcessRunOptions`, `ProcessRunResult`, `ProcessHostExtensions` | `net8.0;net9.0;net10.0` |
-| `Invex.Process.Tests` | NUnit test suite, including a public API surface snapshot test | `net8.0;net9.0;net10.0` |
+| `Invex.Process` | The library: `IProcessRunner` / `ProcessRunner`, `ProcessRunOptions`, `ProcessRunResult`, `ProcessHostExtensions` | `net10.0` |
+| `Invex.Process.Tests` | NUnit test suite, including a public API surface snapshot test | `net10.0` |
 | `_atom` | Atom build definition (`IBuild.cs`) that generates the GitHub Actions workflows | `net10.0` |
 
 Sources live under `src/`, tests under `tests/`, the Atom build definition under `_atom/`, and the
@@ -18,7 +18,7 @@ and `toc.yml`.
 
 ## Build & language specifics
 
-- **.NET 10 SDK** is required. Library and test projects multi-target `net8.0;net9.0;net10.0`.
+- **.NET 10 SDK** is required. Library and test projects target `net10.0`.
 - C# `LangVersion` 14, `ImplicitUsings` and `Nullable` enabled, `TreatWarningsAsErrors` on.
 - Global usings live in each project's `_usings.cs` — add shared usings there, not per-file.
 - `GenerateDocumentationFile` is on and `CS1591` is **enforced** in `src/` — every public type
