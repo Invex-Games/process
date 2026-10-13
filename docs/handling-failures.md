@@ -1,5 +1,8 @@
 # Handling Failures
 
+This page explains what happens when a process exits with a non-zero code or cannot be started at all, and how
+to opt out of the default exception when a failure is an expected outcome.
+
 ## Fail-fast by default
 
 When a process exits with a **non-zero exit code**, `Run` and `RunAsync` throw an exception rather
@@ -80,3 +83,8 @@ catch (Win32Exception ex)
 }
 ```
 
+## See also
+
+- [Logging](logging.md): failure promotion in detail.
+- [Testing Your Code](testing.md): simulating failures in unit tests.
+- <xref:Invex.Process.IProcessRunner>, <xref:Invex.Process.ProcessRunOptions> and <xref:Invex.Process.ProcessRunResult>

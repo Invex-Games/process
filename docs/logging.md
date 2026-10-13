@@ -69,3 +69,8 @@ Two things to watch:
   `TransformError` to redact or suppress them — see
   [Transforming Output](transforming-output.md).
 
+## See also
+
+- [Transforming Output](transforming-output.md): redacting and filtering lines before they are logged.
+- [Handling Failures](handling-failures.md): what happens after a non-zero exit is logged.
+- <xref:Invex.Process.ProcessRunOptions>

@@ -1,0 +1,16 @@
+# Shared Invex API filter: documents the public Invex.* surface only.
+apiRules:
+  - exclude:
+      hasAttribute:
+        uid: System.Runtime.CompilerServices.CompilerGeneratedAttribute
+  - exclude:
+      hasAttribute:
+        uid: System.ComponentModel.EditorBrowsableAttribute
+        ctorArguments:
+          - System.ComponentModel.EditorBrowsableState.Never
+  - exclude:
+      uidRegex: ^.*\.Internal\..*$
+  - include:
+      uidRegex: ^Invex\.
+  - exclude:
+      uidRegex: ^(?!Invex\.)
