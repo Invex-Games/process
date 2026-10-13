@@ -1,8 +1,7 @@
 # Introduction
 
-**Invex.Process** is a small, focused .NET library for running external processes with
-first-class logging, real-time output streaming, full output capture, and fail-fast error
-handling.
+**Invex.Process** runs external executables from .NET code through one injectable service. This page explains the
+problem it solves, when it is (and is not) the right tool, and the principles behind its behavior.
 
 ## The problem
 
@@ -34,6 +33,25 @@ One line of registration (`services.AddProcessRunner()`), one options record des
 run, one result record telling you *what happened* — and consistent logging and error handling
 everywhere.
 
+## When to use it
+
+Invex.Process fits well when:
+
+- Build targets, CLI tools or services **shell out to command-line tools** and you want every call logged and checked
+  the same way.
+- You want a **non-zero exit code to fail the operation** by default, with an actionable message.
+- You want to **unit-test** code that runs processes without starting real ones.
+
+It is probably not the right tool when:
+
+- You need to **write to the process's standard input** or interact with it while it runs. Only stdout and stderr are
+  redirected.
+- You need **hard timeouts that kill the process**. Cancellation stops the wait, not the process (see
+  [Cancellation](cancellation.md)).
+- You need **binary output** or a raw stream. Output is read and captured line by line as text.
+- You need **shell features** such as pipes, globbing or redirection. The executable is started directly with a single
+  argument string; run a shell explicitly if you need one.
+
 ## Design principles
 
 - **Fail fast by default.** A non-zero exit code throws a descriptive exception that includes the
@@ -46,7 +64,7 @@ everywhere.
 - **Stay testable.** Your code depends on the `IProcessRunner` interface, which is trivial to fake
   in unit tests — no real processes needed.
 
-## Library shape
+## Key concepts at a glance
 
 The entire public surface is four types in one namespace (`Invex.Process`):
 
@@ -57,5 +75,9 @@ The entire public surface is four types in one namespace (`Invex.Process`):
 | `ProcessRunResult` | Immutable record describing the outcome. |
 | `ProcessHostExtensions` | `AddProcessRunner()` DI registration. |
 
-Continue with [Getting Started](getting-started.md).
+## Next steps
+
+- [Getting Started](getting-started.md): install the package and run your first process.
+- [Running Processes](running-processes.md): arguments, working directories and environment variables.
+- [API Reference](../api/index.md): the four public types.
 
