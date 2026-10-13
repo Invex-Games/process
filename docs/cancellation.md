@@ -1,6 +1,9 @@
 # Cancellation
 
-`RunAsync` accepts a `CancellationToken` that cancels the **wait** for the process to exit:
+Read this page before putting a timeout on a process run: `RunAsync` accepts a `CancellationToken`, but it cancels
+the **wait** for the process to exit, not the process itself.
+
+For example, to stop waiting after five minutes:
 
 ```csharp
 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
@@ -57,3 +60,8 @@ catch (OperationCanceledException)
 The synchronous `Run` method has no cancellation support — it blocks until the process exits.
 Prefer `RunAsync` whenever a timeout or cooperative cancellation may be needed.
 
+## See also
+
+- [Running Processes](running-processes.md): sync versus async execution.
+- [Handling Failures](handling-failures.md): the other ways a run can end without a result.
+- <xref:Invex.Process.IProcessRunner>

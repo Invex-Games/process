@@ -22,8 +22,12 @@ var options = new ProcessRunOptions("deploy", "--token " + token)
 };
 ```
 
-The redaction applies to both the live log stream *and* the captured `result.Output`, so the secret
-never leaves the process boundary in either form.
+The redaction applies to both the live log stream *and* the captured `result.Output`.
+
+> [!WARNING]
+> Transforms only see the process's output lines. The invocation line (`Run: deploy --token …`) is logged before the
+> process starts and includes the full arguments and any environment variables you set, so a secret passed on the
+> command line still reaches the log at `InvocationLogLevel`. See [Logging](logging.md#secrets-in-logs).
 
 ## Filtering noise
 
@@ -49,7 +53,7 @@ var options = new ProcessRunOptions("git", "status --porcelain")
 };
 ```
 
-## Behavior notes
+## Behavioral notes
 
 - Transforms run on the process's output-reader callbacks, once per line, as lines arrive.
   Keep them fast and side-effect-free.
@@ -58,3 +62,8 @@ var options = new ProcessRunOptions("git", "status --porcelain")
 - Transforms are per-invocation. For a shared policy, build a helper that returns pre-configured
   `ProcessRunOptions` instances, or wrap the delegate in a reusable method.
 
+## See also
+
+- [Logging](logging.md): log levels and failure promotion.
+- [Running Processes](running-processes.md): the rest of `ProcessRunOptions`.
+- <xref:Invex.Process.ProcessRunOptions> and <xref:Invex.Process.ProcessRunResult>

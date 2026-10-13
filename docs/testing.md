@@ -78,3 +78,8 @@ A.CallTo(() => processRunner.RunAsync(A<ProcessRunOptions>._, A<CancellationToke
 - **Remember the contract:** with default options, your code only ever sees results with
   `ExitCode == 0`; non-zero exits arrive as exceptions.
 
+## See also
+
+- [Handling Failures](handling-failures.md): the exception your fakes should mirror.
+- [Getting Started](getting-started.md): the `VersionReporter` example used above.
+- <xref:Invex.Process.IProcessRunner>, <xref:Invex.Process.ProcessRunOptions> and <xref:Invex.Process.ProcessRunResult>

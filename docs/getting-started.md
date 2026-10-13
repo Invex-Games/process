@@ -1,5 +1,8 @@
 # Getting Started
 
+This page takes you from installing the package to running your first process and reading its result. Start here
+if you are adding `Invex.Process` to a host, tool or build for the first time.
+
 ## Installation
 
 ```shell
@@ -71,7 +74,7 @@ The output is *always* fully captured — even if you turn logging down or off e
 
 ## Next steps
 
-- [Running Processes](running-processes.md) — arguments, working directories, environment variables.
-- [Handling Failures](handling-failures.md) — what happens when the exit code isn't zero.
-- [Logging](logging.md) — tune how invocations and output are logged.
-
+- [Running Processes](running-processes.md): arguments, working directories, environment variables.
+- [Handling Failures](handling-failures.md): what happens when the exit code isn't zero.
+- [Logging](logging.md): tune how invocations and output are logged.
+- <xref:Invex.Process.IProcessRunner>, <xref:Invex.Process.ProcessRunOptions> and <xref:Invex.Process.ProcessRunResult> in the API reference.
