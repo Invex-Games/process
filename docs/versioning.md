@@ -1,8 +1,10 @@
-# Semantic Versioning Policy
+# Versioning
 
-**Invex.Process** follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
-Version numbers take the form `MAJOR.MINOR.PATCH` and are derived automatically from the Git
-history via GitVersion.
+This page describes what a version number change means for you as a consumer of the package, so you know which
+upgrades are safe to take without code changes.
+
+**Invex.Process** follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). Version numbers take the
+form `MAJOR.MINOR.PATCH` and are derived automatically from the Git history via GitVersion.
 
 ## What the numbers mean
 
@@ -37,3 +39,7 @@ unintended breaking changes fail the build before they ship.
 Pre-release packages (e.g. `2.1.0-beta.3`) may include API changes between pre-release builds
 without a MAJOR bump. They are intended for early feedback, not production use.
 
+## See also
+
+- [Introduction](introduction.md): the library's design principles, which are part of its behavioral contract.
+- [API Reference](../api/index.md): the public types covered by this policy.
