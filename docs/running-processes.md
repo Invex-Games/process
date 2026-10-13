@@ -102,3 +102,9 @@ var fetch  = git with { Args = "fetch --prune" };
 `IProcessRunner` is stateless and registered as a singleton — it is safe to run multiple processes
 concurrently from multiple threads.
 
+## See also
+
+- [Handling Failures](handling-failures.md): non-zero exit codes and startup failures.
+- [Logging](logging.md): what the invocation line contains.
+- [Cancellation](cancellation.md): cancelling `RunAsync`.
+- <xref:Invex.Process.IProcessRunner> and <xref:Invex.Process.ProcessRunOptions>
