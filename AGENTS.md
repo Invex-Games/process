@@ -44,10 +44,8 @@ The entire public surface is five types in the `Invex.Process` namespace:
 
 - **`IProcessRunner`** — the injectable service: synchronous `Run(options)` and asynchronous
   `RunAsync(options, ct)`. Registered as a singleton; stateless and safe for concurrent use.
-- **`ProcessRunner`** — the `internal sealed` default implementation wrapping
-  `System.Diagnostics.Process`. stdout/stderr are redirected and streamed line-by-line to
-  `ILogger` in real time via `BeginOutputReadLine`/`BeginErrorReadLine`, while also being fully
-  captured into the result.
+- **`ProcessHostExtensions`** — the `AddProcessRunner()` extension on `IServiceCollection`, which
+  registers `IProcessRunner` as a singleton backed by the default implementation.
 - **`ProcessRunOptions`** — immutable record describing one invocation: name, args, working
   directory, environment variables, per-stream log levels, per-line transforms
   (`TransformOutput`/`TransformError`), and `AllowFailedResult`.
@@ -55,6 +53,11 @@ The entire public surface is five types in the `Invex.Process` namespace:
   originating `RunOptions`.
 - **`ProcessException`** — thrown on a non-zero exit (unless `AllowFailedResult`); derives from
   `Exception` and carries `ExitCode` and the full `Result`.
+
+The default implementation, `ProcessRunner`, is `internal sealed` and not part of the public
+surface. It wraps `System.Diagnostics.Process`; stdout/stderr are redirected and streamed
+line-by-line to `ILogger` in real time via `BeginOutputReadLine`/`BeginErrorReadLine`, while also
+being fully captured into the result.
 
 ### Behavioral contracts (do not break these)
 
