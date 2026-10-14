@@ -172,7 +172,11 @@ internal interface IBuild : IWorkflowBuildDefinition,
         t => t
             .DescribedAs("Builds the DocFX documentation.")
             .ProducesArtifact(GeneratedDocsArtifactName)
-            .Executes(cancellationToken => BuildDocFxDocs(cancellationToken: cancellationToken));
+            .Executes(cancellationToken =>
+                BuildDocFxDocs([
+                    Projects.Invex_Process.Path(RootedFileSystem),
+                ],
+                cancellationToken));
 
     Target ServeDocs =>
         t => t

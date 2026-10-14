@@ -35,8 +35,13 @@ dotnet test Invex.Process.slnx
 Build the docs site:
 
 ```shell
+dotnet build Invex.Process.slnx --configuration Release
 docfx docfx.json          # add --serve to preview locally
 ```
+
+DocFX reads the compiled `bin/Release/net10.0` assembly and its XML documentation file, because
+source extraction omits members declared in C# 14 extension blocks. Build in Release before
+regenerating docs; `atom BuildDocs` does this for you.
 
 ## Architecture overview
 

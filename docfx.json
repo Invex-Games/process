@@ -5,7 +5,7 @@
       "src": [
         {
           "files": [
-            "src/**/*.csproj"
+            "src/Invex.Process/bin/Release/net10.0/Invex.Process.dll"
           ]
         }
       ],
