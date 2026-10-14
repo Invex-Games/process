@@ -42,11 +42,11 @@ public interface IProcessRunner
     ///     Only returned when the exit code is zero, or when
     ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>true</c>.
     /// </returns>
-    /// <exception cref="Exception">
+    /// <exception cref="ProcessException">
     ///     Thrown when the process exits with a non-zero code and
     ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>false</c>.  The message
     ///     includes the command line, exit code, working directory (when set), and any captured
-    ///     stderr.
+    ///     stderr; <see cref="ProcessException.Result" /> carries the full captured result.
     /// </exception>
     /// <exception cref="System.ComponentModel.Win32Exception">
     ///     Thrown when the executable named by <see cref="ProcessRunOptions.Name" /> cannot be
@@ -68,11 +68,11 @@ public interface IProcessRunner
     ///     Only completes successfully when the exit code is zero, or when
     ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>true</c>.
     /// </returns>
-    /// <exception cref="Exception">
+    /// <exception cref="ProcessException">
     ///     Thrown (on the returned task) when the process exits with a non-zero code and
     ///     <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>false</c>.  The message
     ///     includes the command line, exit code, working directory (when set), and any captured
-    ///     stderr.
+    ///     stderr; <see cref="ProcessException.Result" /> carries the full captured result.
     /// </exception>
     /// <exception cref="System.ComponentModel.Win32Exception">
     ///     Thrown when the executable named by <see cref="ProcessRunOptions.Name" /> cannot be
@@ -108,8 +108,8 @@ public interface IProcessRunner
 ///         (<see cref="ProcessRunOptions.OutputLogLevel" /> / <see cref="ProcessRunOptions.ErrorLogLevel" />)
 ///         are below <see cref="LogLevel.Information" />.  This happens regardless of
 ///         <see cref="ProcessRunOptions.AllowFailedResult" />, ensuring failure diagnostics are
-///         visible even when per-line output logging was suppressed.  A descriptive exception is
-///         then thrown unless <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>true</c>.
+///         visible even when per-line output logging was suppressed.  A descriptive
+///         <see cref="ProcessException" /> is then thrown unless <see cref="ProcessRunOptions.AllowFailedResult" /> is <c>true</c>.
 ///     </para>
 /// </remarks>
 /// <param name="logger">The logger for capturing process execution diagnostics.</param>
@@ -127,7 +127,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
                     options.Name,
                     options.Args,
                     options.WorkingDirectory,
-                    string.Join(", ", options.EnvironmentVariables.Select(kv => $"{kv.Key}={kv.Value}")));
+                    FormatEnvironmentVariableNames(options));
 
                 break;
             case { WorkingDirectory.Length: > 0 }:
@@ -143,7 +143,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
                     "Run: {Name} {Args} with env {EnvironmentVariables}",
                     options.Name,
                     options.Args,
-                    string.Join(", ", options.EnvironmentVariables.Select(kv => $"{kv.Key}={kv.Value}")));
+                    FormatEnvironmentVariableNames(options));
 
                 break;
             default:
@@ -206,7 +206,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             return result;
         }
 
-        throw new(BuildProcessErrorMessage(options, result.ExitCode, error));
+        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, error), result);
 
         void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e)
         {
@@ -254,7 +254,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
                     options.Name,
                     options.Args,
                     options.WorkingDirectory,
-                    string.Join(", ", options.EnvironmentVariables.Select(kv => $"{kv.Key}={kv.Value}")));
+                    FormatEnvironmentVariableNames(options));
 
                 break;
             case { WorkingDirectory.Length: > 0 }:
@@ -270,7 +270,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
                     "Run: {Name} {Args} with env {EnvironmentVariables}",
                     options.Name,
                     options.Args,
-                    string.Join(", ", options.EnvironmentVariables.Select(kv => $"{kv.Key}={kv.Value}")));
+                    FormatEnvironmentVariableNames(options));
 
                 break;
             default:
@@ -333,7 +333,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             return result;
         }
 
-        throw new(BuildProcessErrorMessage(options, result.ExitCode, error));
+        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, error), result);
 
         void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e)
         {
@@ -367,6 +367,18 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             logger.Log(options.OutputLogLevel, "{Output}", text);
         }
     }
+
+    /// <summary>
+    ///     Formats the names of the configured environment variables for the invocation log line.
+    /// </summary>
+    /// <remarks>
+    ///     Only the variable names are logged, never their values, because environment variables
+    ///     are a common way to pass secrets (tokens, passwords) to child processes.
+    /// </remarks>
+    /// <param name="options">The options whose environment variables are formatted.</param>
+    /// <returns>A comma-separated list of the variable names.</returns>
+    private static string FormatEnvironmentVariableNames(ProcessRunOptions options) =>
+        string.Join(", ", options.EnvironmentVariables.Keys);
 
     private static string BuildProcessErrorMessage(ProcessRunOptions options, int exitCode, string error)
     {

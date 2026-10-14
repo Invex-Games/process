@@ -64,7 +64,10 @@ A.CallTo(() => processRunner.RunAsync(A<ProcessRunOptions>._, A<CancellationToke
 
 // Code under test relies on the default throwing behavior:
 A.CallTo(() => processRunner.RunAsync(A<ProcessRunOptions>._, A<CancellationToken>._))
-    .Throws(new Exception("Process 'git' failed with exit code 128"));
+    .Throws((ProcessRunOptions options, CancellationToken _) =>
+        new ProcessException(
+            "Process 'git' failed with exit code 128",
+            new ProcessRunResult(options, 128, "", "fatal: not a git repository")));
 ```
 
 ## Tips

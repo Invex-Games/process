@@ -1,4 +1,4 @@
-namespace Invex.Process.Tests;
+﻿namespace Invex.Process.Tests;
 
 /// <summary>
 ///     Integration tests for <see cref="ProcessRunner" /> that spawn real OS processes.
@@ -207,6 +207,57 @@ internal sealed class ProcessRunnerTests
     }
 
     [Test]
+    public void Run_WithEnvironmentVariable_LogsNameButNotValue()
+    {
+        // Arrange
+        var logger = new RecordingLogger();
+        var runner = new ProcessRunner(logger);
+        const string key = "ATOM_TEST_SECRET_RUNNER";
+        const string value = "super-secret-value";
+
+        var options = EchoEnvVarOptions(key) with
+        {
+            EnvironmentVariables = new()
+            {
+                [key] = value,
+            },
+            TransformOutput = _ => null,
+        };
+
+        // Act
+        runner.Run(options);
+
+        // Assert
+        logger
+            .Messages
+            .Where(m => m.StartsWith("Run: ", StringComparison.Ordinal))
+            .ShouldHaveSingleItem()
+            .ShouldContain(key);
+        logger.Messages.ShouldAllBe(m => !m.Contains(value));
+    }
+
+    [Test]
+    public void Run_WhenExitCodeIsNonZero_ThrowsProcessExceptionWithResult()
+    {
+        // Arrange
+        var runner = CreateRunner();
+
+        var options = FailOptions() with
+        {
+            AllowFailedResult = false,
+        };
+
+        // Act
+        var exception = Should.Throw<ProcessException>(() => runner.Run(options));
+
+        // Assert
+        exception.ExitCode.ShouldBe(1);
+        exception.Result.ExitCode.ShouldBe(1);
+        exception.Result.RunOptions.ShouldBeSameAs(options);
+        exception.Message.ShouldContain("exit code 1");
+    }
+
+    [Test]
     public void Run_WithTransformOutput_TransformIsAppliedToEachLine()
     {
         // Arrange
@@ -364,6 +415,57 @@ internal sealed class ProcessRunnerTests
     }
 
     [Test]
+    public async Task RunAsync_WithEnvironmentVariable_LogsNameButNotValue()
+    {
+        // Arrange
+        var logger = new RecordingLogger();
+        var runner = new ProcessRunner(logger);
+        const string key = "ATOM_TEST_SECRET_RUNNER_ASYNC";
+        const string value = "async-super-secret-value";
+
+        var options = EchoEnvVarOptions(key) with
+        {
+            EnvironmentVariables = new()
+            {
+                [key] = value,
+            },
+            TransformOutput = _ => null,
+        };
+
+        // Act
+        await runner.RunAsync(options);
+
+        // Assert
+        logger
+            .Messages
+            .Where(m => m.StartsWith("Run: ", StringComparison.Ordinal))
+            .ShouldHaveSingleItem()
+            .ShouldContain(key);
+        logger.Messages.ShouldAllBe(m => !m.Contains(value));
+    }
+
+    [Test]
+    public async Task RunAsync_WhenExitCodeIsNonZero_ThrowsProcessExceptionWithResult()
+    {
+        // Arrange
+        var runner = CreateRunner();
+
+        var options = FailOptions() with
+        {
+            AllowFailedResult = false,
+        };
+
+        // Act
+        var exception = await Should.ThrowAsync<ProcessException>(() => runner.RunAsync(options));
+
+        // Assert
+        exception.ExitCode.ShouldBe(1);
+        exception.Result.ExitCode.ShouldBe(1);
+        exception.Result.RunOptions.ShouldBeSameAs(options);
+        exception.Message.ShouldContain("exit code 1");
+    }
+
+    [Test]
     public async Task RunAsync_WithTransformOutput_TransformIsAppliedToEachLine()
     {
         // Arrange
@@ -427,5 +529,40 @@ internal sealed class ProcessRunnerTests
 
         // Act / Assert
         await Should.ThrowAsync<OperationCanceledException>(() => runner.RunAsync(LongRunningOptions(), cts.Token));
+    }
+
+    /// <summary>
+    ///     A minimal <see cref="ILogger{TCategoryName}" /> that records every formatted message.
+    /// </summary>
+    private sealed class RecordingLogger : ILogger<ProcessRunner>
+    {
+        private readonly List<string> _messages = [];
+
+        public IReadOnlyList<string> Messages
+        {
+            get
+            {
+                lock (_messages)
+                    return [.. _messages];
+            }
+        }
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull =>
+            null;
+
+        public bool IsEnabled(LogLevel logLevel) =>
+            true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            lock (_messages)
+                _messages.Add(formatter(state, exception));
+        }
     }
 }

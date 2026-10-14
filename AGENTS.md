@@ -8,7 +8,7 @@ fail-fast error handling. Keep changes focused and defer to the linked docs for 
 
 | Project | Role | Target frameworks |
 |---------|------|-------------------|
-| `Invex.Process` | The library: `IProcessRunner` / `ProcessRunner`, `ProcessRunOptions`, `ProcessRunResult`, `ProcessHostExtensions` | `net10.0` |
+| `Invex.Process` | The library: `IProcessRunner` / `ProcessRunner`, `ProcessRunOptions`, `ProcessRunResult`, `ProcessException`, `ProcessHostExtensions` | `net10.0` |
 | `Invex.Process.Tests` | NUnit test suite, including a public API surface snapshot test | `net10.0` |
 | `_atom` | Atom build definition (`IBuild.cs`) that generates the GitHub Actions workflows | `net10.0` |
 
@@ -40,24 +40,30 @@ docfx docfx.json          # add --serve to preview locally
 
 ## Architecture overview
 
-The entire public surface is four types in the `Invex.Process` namespace:
+The entire public surface is five types in the `Invex.Process` namespace:
 
 - **`IProcessRunner`** — the injectable service: synchronous `Run(options)` and asynchronous
   `RunAsync(options, ct)`. Registered as a singleton; stateless and safe for concurrent use.
-- **`ProcessRunner`** — the `internal sealed` default implementation wrapping
-  `System.Diagnostics.Process`. stdout/stderr are redirected and streamed line-by-line to
-  `ILogger` in real time via `BeginOutputReadLine`/`BeginErrorReadLine`, while also being fully
-  captured into the result.
+- **`ProcessHostExtensions`** — the `AddProcessRunner()` extension on `IServiceCollection`, which
+  registers `IProcessRunner` as a singleton backed by the default implementation.
 - **`ProcessRunOptions`** — immutable record describing one invocation: name, args, working
   directory, environment variables, per-stream log levels, per-line transforms
   (`TransformOutput`/`TransformError`), and `AllowFailedResult`.
 - **`ProcessRunResult`** — immutable record with `ExitCode`, captured `Output`/`Error`, and the
   originating `RunOptions`.
+- **`ProcessException`** — thrown on a non-zero exit (unless `AllowFailedResult`); derives from
+  `Exception` and carries `ExitCode` and the full `Result`.
+
+The default implementation, `ProcessRunner`, is `internal sealed` and not part of the public
+surface. It wraps `System.Diagnostics.Process`; stdout/stderr are redirected and streamed
+line-by-line to `ILogger` in real time via `BeginOutputReadLine`/`BeginErrorReadLine`, while also
+being fully captured into the result.
 
 ### Behavioral contracts (do not break these)
 
-- **Fail-fast by default**: a non-zero exit code throws a descriptive exception (command line,
-  exit code, working directory, stderr) unless `AllowFailedResult` is `true`.
+- **Fail-fast by default**: a non-zero exit code throws a descriptive `ProcessException` (command
+  line, exit code, working directory, stderr) unless `AllowFailedResult` is `true`.
+- **Environment variable values are never logged** — the invocation line names the variables only.
 - **Output is always fully captured** into the result regardless of log levels.
 - **Failure promotion**: on any non-zero exit, stdout/stderr configured below `Information` are
   re-logged in full at `Information`/`Warning` respectively — regardless of `AllowFailedResult`.

@@ -54,7 +54,7 @@ It is probably not the right tool when:
 
 ## Design principles
 
-- **Fail fast by default.** A non-zero exit code throws a descriptive exception that includes the
+- **Fail fast by default.** A non-zero exit code throws a descriptive `ProcessException` that includes the
   command line, exit code, working directory, and captured stderr. Opt out per-invocation with
   `AllowFailedResult` when you want to handle failures yourself.
 - **Never lose output.** Full stdout and stderr are always captured into the result, regardless of

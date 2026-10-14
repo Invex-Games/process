@@ -11,6 +11,17 @@
     ]
   },
   {
+    Name: Invex.Process.ProcessException,
+    Members: [
+      {
+        Name: ExitCode
+      },
+      {
+        Name: Result
+      }
+    ]
+  },
+  {
     Name: Invex.Process.ProcessHostExtensions,
     Members: [
       {
