@@ -5,8 +5,8 @@ to opt out of the default exception when a failure is an expected outcome.
 
 ## Fail-fast by default
 
-When a process exits with a **non-zero exit code**, `Run` and `RunAsync` throw an exception rather
-than returning a result. This means build steps and tools fail immediately without callers having
+When a process exits with a **non-zero exit code**, `Run` and `RunAsync` throw a `ProcessException`
+rather than returning a result. This means build steps and tools fail immediately without callers having
 to remember to check exit codes:
 
 ```csharp
@@ -30,6 +30,21 @@ It includes:
 - the full command line,
 - the working directory (when one was set),
 - the captured stderr (when the process wrote any).
+
+`ProcessException` derives from `Exception` and also exposes the failure programmatically:
+`ExitCode` and `Result` (the full `ProcessRunResult`, with captured stdout/stderr and the original
+`ProcessRunOptions`):
+
+```csharp
+try
+{
+    processRunner.Run(new ProcessRunOptions("git", "rev-parse HEAD"));
+}
+catch (ProcessException ex) when (ex.ExitCode == 128)
+{
+    Console.WriteLine($"Not a git repository: {ex.Result.Error}");
+}
+```
 
 ## Tolerating failures with `AllowFailedResult`
 
@@ -87,4 +102,5 @@ catch (Win32Exception ex)
 
 - [Logging](logging.md): failure promotion in detail.
 - [Testing Your Code](testing.md): simulating failures in unit tests.
-- <xref:Invex.Process.IProcessRunner>, <xref:Invex.Process.ProcessRunOptions> and <xref:Invex.Process.ProcessRunResult>
+- <xref:Invex.Process.IProcessRunner>, <xref:Invex.Process.ProcessRunOptions>, <xref:Invex.Process.ProcessRunResult> and
+  <xref:Invex.Process.ProcessException>

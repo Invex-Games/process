@@ -8,8 +8,9 @@
 ///     <para>
 ///         All properties have defaults suited to typical build-automation use: invocation is
 ///         logged at <see cref="LogLevel.Information" />, stdout at <see cref="LogLevel.Debug" />,
-///         and stderr at <see cref="LogLevel.Warning" />.  A non-zero exit code throws by default
-///         so build steps fail fast without requiring callers to check exit codes manually.
+///         and stderr at <see cref="LogLevel.Warning" />.  A non-zero exit code throws a
+///         <see cref="ProcessException" /> by default so build steps fail fast without requiring
+///         callers to check exit codes manually.
 ///     </para>
 ///     <para>
 ///         Both stdout and stderr are fully captured into <see cref="ProcessRunResult" /> regardless
@@ -60,8 +61,18 @@ public sealed record ProcessRunOptions(string Name, string Args)
     ///     (e.g. <c>Run: dotnet build --configuration Release</c>).
     /// </summary>
     /// <remarks>
-    ///     Defaults to <see cref="LogLevel.Information" />.  Lower this to
-    ///     <see cref="LogLevel.Debug" /> for noisy or frequently-called sub-processes.
+    ///     <para>
+    ///         Defaults to <see cref="LogLevel.Information" />.  Lower this to
+    ///         <see cref="LogLevel.Debug" /> for noisy or frequently-called sub-processes.
+    ///     </para>
+    ///     <para>
+    ///         The invocation line includes the full <see cref="Args" />, the
+    ///         <see cref="WorkingDirectory" /> when set, and the <em>names</em> of any
+    ///         <see cref="EnvironmentVariables" />.  Environment variable values are never logged,
+    ///         so they are a safer way to pass secrets than command-line arguments.  When a secret
+    ///         must be passed as an argument, lower this level (or set it to
+    ///         <see cref="LogLevel.None" />) to keep it out of the log.
+    ///     </para>
     /// </remarks>
     public LogLevel InvocationLogLevel { get; init; } = LogLevel.Information;
 
@@ -122,9 +133,15 @@ public sealed record ProcessRunOptions(string Name, string Args)
     ///     Gets the environment variables to inject into the process's environment.
     /// </summary>
     /// <remarks>
-    ///     Keys are variable names and values are their string values.  A <c>null</c> value removes
-    ///     the inherited variable from the child process's environment.  Variables not listed here
-    ///     are inherited from the current process unchanged.
+    ///     <para>
+    ///         Keys are variable names and values are their string values.  A <c>null</c> value
+    ///         removes the inherited variable from the child process's environment.  Variables not
+    ///         listed here are inherited from the current process unchanged.
+    ///     </para>
+    ///     <para>
+    ///         Only the variable names appear in the invocation log line (see
+    ///         <see cref="InvocationLogLevel" />); their values are never logged.
+    ///     </para>
     /// </remarks>
     public Dictionary<string, string?> EnvironmentVariables { get; init; } = [];
 

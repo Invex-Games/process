@@ -17,8 +17,8 @@ full output capture, and fail-fast error handling. It wraps `System.Diagnostics.
   instead of being buffered until exit.
 - **Full output capture.** Complete stdout/stderr are always captured into the result, regardless of log level, so you
   can inspect them even when logging is suppressed.
-- **Fail-fast by default.** A non-zero exit code throws a descriptive exception (including command, exit code, working
-  directory, and stderr), or you opt in to inspect failures yourself.
+- **Fail-fast by default.** A non-zero exit code throws a descriptive `ProcessException` (including command, exit code,
+  working directory, and stderr, plus the full result), or you opt in to inspect failures yourself.
 - **Configurable log levels.** Control how the invocation, stdout, and stderr are logged.
 - **Per-line transforms.** Rewrite or suppress individual output/error lines, for example to redact secrets or filter
   noisy progress output.

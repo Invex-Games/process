@@ -10,6 +10,7 @@ match the shipped package; the table below is a map of where to start.
 | [`IProcessRunner`](xref:Invex.Process.IProcessRunner) | Interface | Injectable service for executing external processes. Exposes synchronous `Run` and asynchronous `RunAsync`. Registered as a singleton. |
 | [`ProcessRunOptions`](xref:Invex.Process.ProcessRunOptions) | Record | Immutable configuration for a single execution: executable name, arguments, working directory, environment variables, log levels, per-line transforms, and failure tolerance. |
 | [`ProcessRunResult`](xref:Invex.Process.ProcessRunResult) | Record | The result of a completed execution: exit code, full captured stdout/stderr, and the originating options. |
+| [`ProcessException`](xref:Invex.Process.ProcessException) | Exception | Thrown on a non-zero exit (unless `AllowFailedResult` is set); carries the exit code and the full `ProcessRunResult`. |
 | [`ProcessHostExtensions`](xref:Invex.Process.ProcessHostExtensions) | Static class | `IServiceCollection` extensions; call `AddProcessRunner()` once during host setup. |
 
 ## Typical flow

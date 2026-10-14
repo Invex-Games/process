@@ -11,10 +11,11 @@ Each invocation produces three kinds of log entries:
 1. **The invocation line** — logged once when the process starts:
 
    ```text
-   Run: dotnet build --configuration Release in /repo/src with env CI=true
+   Run: dotnet build --configuration Release in /repo/src with env CI, NUGET_API_KEY
    ```
 
-   The working directory and environment variables are included only when set.
+   The working directory and environment variables are included only when set. Only the
+   environment variable *names* are logged, never their values.
 
 2. **Output lines** — each stdout line, streamed in real time as the process runs.
 
@@ -63,8 +64,10 @@ failure). The common pattern is therefore:
 
 Two things to watch:
 
-- The **invocation line** includes the command arguments and any environment variables you set.
-  Avoid passing secrets as plain arguments/variables, or lower `InvocationLogLevel`.
+- The **invocation line** includes the full command arguments and the *names* (not values) of any
+  environment variables you set. Prefer passing secrets through `EnvironmentVariables`; if a
+  secret must go on the command line, lower `InvocationLogLevel` (or set it to `LogLevel.None`).
+  The exception thrown on a non-zero exit also includes the full command line.
 - **Output lines** may echo secrets printed by the tool. Use `TransformOutput` /
   `TransformError` to redact or suppress them — see
   [Transforming Output](transforming-output.md).

@@ -26,8 +26,8 @@ The redaction applies to both the live log stream *and* the captured `result.Out
 
 > [!WARNING]
 > Transforms only see the process's output lines. The invocation line (`Run: deploy --token …`) is logged before the
-> process starts and includes the full arguments and any environment variables you set, so a secret passed on the
-> command line still reaches the log at `InvocationLogLevel`. See [Logging](logging.md#secrets-in-logs).
+> process starts and includes the full arguments (environment variables are logged by name only), so a secret passed
+> on the command line still reaches the log at `InvocationLogLevel`. See [Logging](logging.md#secrets-in-logs).
 
 ## Filtering noise
 
