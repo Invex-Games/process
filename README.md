@@ -3,7 +3,7 @@
 [![Build](https://github.com/Invex-Games/process/actions/workflows/Build.yml/badge.svg)](https://github.com/Invex-Games/process/actions/workflows/Build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Invex.Process.svg)](https://www.nuget.org/packages/Invex.Process)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Invex-Games/process/blob/main/LICENSE.txt)
-[![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%209.0%20%7C%2010.0-512BD4.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
 
 A small, focused .NET library for running external processes with first-class logging, real-time output streaming,
 full output capture, and fail-fast error handling. It wraps `System.Diagnostics.Process` behind a clean, injectable

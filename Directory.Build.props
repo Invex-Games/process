@@ -6,7 +6,8 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageDescription>A process runner library</PackageDescription>
+    <PackageDescription>Runs external processes behind an injectable IProcessRunner with logging, real-time output streaming, full output capture and fail-fast error handling</PackageDescription>
+    <PackageProjectUrl>https://invex-games.github.io/process/</PackageProjectUrl>
     <EnablePackageValidation>true</EnablePackageValidation>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
