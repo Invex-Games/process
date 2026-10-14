@@ -137,6 +137,23 @@ A drift between `_atom/IBuild.cs` and the committed YAML should be treated as a 
 4. Update `PublicApiTests.VerifyPublicApiSurface.verified.txt` (see the Verify workflow above).
 5. Document it in the relevant `docs/` page and, if user-facing, the README.
 
+## Documentation
+
+Docs follow the shared Invex documentation standard used by every Invex library:
+
+- **README.md** is also the NuGet readme. Keep the fixed section order (title, badges, pitch, Features,
+  Installation, Quick start, Usage, Documentation, Development, License) and use absolute links only
+  (`https://github.com/Invex-Games/process/blob/main/...` or the docs site), so they work on nuget.org.
+- **DocFX site** (`docfx.json`, `toc.yml`, `index.md`, `docs/`, `api/index.md`), published to
+  https://invex-games.github.io/process/. `docs/introduction.md` and `docs/getting-started.md` come first; every page
+  opens with one to three sentences on what it covers and ends with a "See also" or "Next steps" list. Link API
+  types with `<xref:Namespace.Type>`, not file paths.
+- **`api/index.md`** is the only hand-written file under `api/`; everything else there is generated. Put per-type
+  detail in XML docs, not in hand-written API pages.
+- **XML docs are enforced.** `CS1591` is not suppressed for shipped projects, so every public type and member needs
+  `<summary>`, plus `<param>`, `<typeparam>`, `<returns>` and `<exception>` where they apply, `<remarks>` for
+  non-obvious behaviour, and `<see cref>`/`<paramref>`/`<see langword>` for references.
+
 ## Defer to the docs
 
 For anything beyond the above, prefer these over duplicating detail:
@@ -150,5 +167,5 @@ For anything beyond the above, prefer these over duplicating detail:
 - `docs/transforming-output.md` — per-line rewriting and suppression.
 - `docs/cancellation.md` — what cancellation does and doesn't do.
 - `docs/testing.md` — faking `IProcessRunner` in consumer tests.
-- `api/SemVer.md` — the versioning policy and what counts as the public API.
+- `docs/versioning.md` — the versioning policy and what counts as the public API.
 
