@@ -91,10 +91,11 @@ public interface IProcessRunner
 /// </summary>
 /// <remarks>
 ///     <para>
-///         stdout and stderr are both redirected and read asynchronously via
+///         stdout and stderr are both redirected and streamed to the logger in real time rather than
+///         buffered. On .NET 11 and later they are read as one ordered stream of lines with
+///         <c>Process.ReadAllLines</c> / <c>Process.ReadAllLinesAsync</c>; on .NET 10 they are read via
 ///         <see cref="System.Diagnostics.Process.BeginOutputReadLine" /> /
-///         <see cref="System.Diagnostics.Process.BeginErrorReadLine" /> so that output is streamed
-///         to the logger in real time rather than buffered.
+///         <see cref="System.Diagnostics.Process.BeginErrorReadLine" />.
 ///     </para>
 ///     <para>
 ///         Each received line is passed through <see cref="ProcessRunOptions.TransformOutput" /> or
@@ -169,6 +170,17 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
 
+#if NET11_0_OR_GREATER
+        process.Start();
+
+        // stdout and stderr arrive as one stream of lines, in the order the process wrote them.
+        foreach (var line in process.ReadAllLines())
+            OnLine(line.Content, line.StandardError);
+
+        var exitStatus = process.WaitForExitStatus();
+        var exitCode = exitStatus.ExitCode;
+        var signal = exitStatus.Signal;
+#else
         process.OutputDataReceived += OnProcessOnOutputDataReceived;
         process.ErrorDataReceived += OnProcessOnErrorDataReceived;
 
@@ -185,10 +197,14 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             process.ErrorDataReceived -= OnProcessOnErrorDataReceived;
         }
 
+        var exitCode = process.ExitCode;
+        PosixSignal? signal = null;
+#endif
+
         var output = outputBuilder.ToString();
         var error = errorBuilder.ToString();
 
-        var result = new ProcessRunResult(options, process.ExitCode, output, error);
+        var result = new ProcessRunResult(options, exitCode, output, error);
 
         if (result.ExitCode is 0)
             return result;
@@ -206,39 +222,43 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             return result;
         }
 
-        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, error), result);
+        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, signal, error), result);
 
-        void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e)
+        void OnLine(string? data, bool isError)
         {
-            if (e.Data is null)
+            if (data is null)
                 return;
 
-            var text = options.TransformError is not null
-                ? options.TransformError(e.Data)
-                : e.Data;
+            var transform = isError
+                ? options.TransformError
+                : options.TransformOutput;
+
+            var text = transform is not null
+                ? transform(data)
+                : data;
 
             if (text is null)
                 return;
 
-            errorBuilder.AppendLine(text);
-            logger.Log(options.ErrorLogLevel, "{Error}", text);
+            if (isError)
+            {
+                errorBuilder.AppendLine(text);
+                logger.Log(options.ErrorLogLevel, "{Error}", text);
+            }
+            else
+            {
+                outputBuilder.AppendLine(text);
+                logger.Log(options.OutputLogLevel, "{Output}", text);
+            }
         }
 
-        void OnProcessOnOutputDataReceived(object _, DataReceivedEventArgs e)
-        {
-            if (e.Data is null)
-                return;
+#if !NET11_0_OR_GREATER
+        void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e) =>
+            OnLine(e.Data, true);
 
-            var text = options.TransformOutput is not null
-                ? options.TransformOutput(e.Data)
-                : e.Data;
-
-            if (text is null)
-                return;
-
-            outputBuilder.AppendLine(text);
-            logger.Log(options.OutputLogLevel, "{Output}", text);
-        }
+        void OnProcessOnOutputDataReceived(object _, DataReceivedEventArgs e) =>
+            OnLine(e.Data, false);
+#endif
     }
 
     /// <inheritdoc />
@@ -296,6 +316,17 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
 
+#if NET11_0_OR_GREATER
+        process.Start();
+
+        // stdout and stderr arrive as one stream of lines, in the order the process wrote them.
+        await foreach (var line in process.ReadAllLinesAsync(cancellationToken))
+            OnLine(line.Content, line.StandardError);
+
+        var exitStatus = await process.WaitForExitStatusAsync(cancellationToken);
+        var exitCode = exitStatus.ExitCode;
+        var signal = exitStatus.Signal;
+#else
         process.OutputDataReceived += OnProcessOnOutputDataReceived;
         process.ErrorDataReceived += OnProcessOnErrorDataReceived;
 
@@ -312,10 +343,14 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             process.ErrorDataReceived -= OnProcessOnErrorDataReceived;
         }
 
+        var exitCode = process.ExitCode;
+        PosixSignal? signal = null;
+#endif
+
         var output = outputBuilder.ToString();
         var error = errorBuilder.ToString();
 
-        var result = new ProcessRunResult(options, process.ExitCode, output, error);
+        var result = new ProcessRunResult(options, exitCode, output, error);
 
         if (result.ExitCode is 0)
             return result;
@@ -333,39 +368,43 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
             return result;
         }
 
-        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, error), result);
+        throw new ProcessException(BuildProcessErrorMessage(options, result.ExitCode, signal, error), result);
 
-        void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e)
+        void OnLine(string? data, bool isError)
         {
-            if (e.Data is null)
+            if (data is null)
                 return;
 
-            var text = options.TransformError is not null
-                ? options.TransformError(e.Data)
-                : e.Data;
+            var transform = isError
+                ? options.TransformError
+                : options.TransformOutput;
+
+            var text = transform is not null
+                ? transform(data)
+                : data;
 
             if (text is null)
                 return;
 
-            errorBuilder.AppendLine(text);
-            logger.Log(options.ErrorLogLevel, "{Error}", text);
+            if (isError)
+            {
+                errorBuilder.AppendLine(text);
+                logger.Log(options.ErrorLogLevel, "{Error}", text);
+            }
+            else
+            {
+                outputBuilder.AppendLine(text);
+                logger.Log(options.OutputLogLevel, "{Output}", text);
+            }
         }
 
-        void OnProcessOnOutputDataReceived(object _, DataReceivedEventArgs e)
-        {
-            if (e.Data is null)
-                return;
+#if !NET11_0_OR_GREATER
+        void OnProcessOnErrorDataReceived(object _, DataReceivedEventArgs e) =>
+            OnLine(e.Data, true);
 
-            var text = options.TransformOutput is not null
-                ? options.TransformOutput(e.Data)
-                : e.Data;
-
-            if (text is null)
-                return;
-
-            outputBuilder.AppendLine(text);
-            logger.Log(options.OutputLogLevel, "{Output}", text);
-        }
+        void OnProcessOnOutputDataReceived(object _, DataReceivedEventArgs e) =>
+            OnLine(e.Data, false);
+#endif
     }
 
     /// <summary>
@@ -380,10 +419,17 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
     private static string FormatEnvironmentVariableNames(ProcessRunOptions options) =>
         string.Join(", ", options.EnvironmentVariables.Keys);
 
-    private static string BuildProcessErrorMessage(ProcessRunOptions options, int exitCode, string error)
+    private static string BuildProcessErrorMessage(
+        ProcessRunOptions options,
+        int exitCode,
+        PosixSignal? signal,
+        string error)
     {
         var errorMessage = new StringBuilder();
-        errorMessage.AppendLine($"Process '{options.Name}' failed with exit code {exitCode}");
+
+        errorMessage.AppendLine(signal is { } terminatingSignal
+            ? $"Process '{options.Name}' was terminated by signal {terminatingSignal} (exit code {exitCode})"
+            : $"Process '{options.Name}' failed with exit code {exitCode}");
         errorMessage.AppendLine($"  Command: {options.Name} {options.Args}");
 
         if (options.WorkingDirectory is { Length: > 0 })

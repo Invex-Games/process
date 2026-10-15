@@ -531,6 +531,25 @@ internal sealed class ProcessRunnerTests
         await Should.ThrowAsync<OperationCanceledException>(() => runner.RunAsync(LongRunningOptions(), cts.Token));
     }
 
+#if NET11_0_OR_GREATER
+    [Test]
+    public async Task RunAsync_WhenProcessIsKilledBySignal_ErrorMessageNamesTheSignal()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("POSIX signals are not available on Windows.");
+
+        // Arrange
+        var runner = CreateRunner();
+        var options = new ProcessRunOptions("sh", "-c \"kill -TERM $$\"");
+
+        // Act
+        var exception = await Should.ThrowAsync<ProcessException>(() => runner.RunAsync(options));
+
+        // Assert
+        exception.Message.ShouldContain("terminated by signal SIGTERM");
+    }
+
+#endif
     /// <summary>
     ///     A minimal <see cref="ILogger{TCategoryName}" /> that records every formatted message.
     /// </summary>

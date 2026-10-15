@@ -9,7 +9,7 @@ if you are adding `Invex.Process` to a host, tool or build for the first time.
 dotnet add package Invex.Process
 ```
 
-The package targets `net10.0`.
+The package targets `net10.0` and `net11.0`. On .NET 11 it reads output with the new `Process.ReadAllLines` APIs, so stdout and stderr lines are logged in the order the process wrote them, and a process killed by a signal is reported by signal name.
 
 ## Register the service
 

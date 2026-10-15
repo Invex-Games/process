@@ -32,7 +32,7 @@ full output capture, and fail-fast error handling. It wraps `System.Diagnostics.
 dotnet add package Invex.Process
 ```
 
-The package targets `net10.0`. It depends on
+The package targets `net10.0` and `net11.0`. It depends on
 `Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Hosting.Abstractions`, and logs
 through `ILogger`, so configure logging on your host (it is by default with `Host.CreateApplicationBuilder`).
 
