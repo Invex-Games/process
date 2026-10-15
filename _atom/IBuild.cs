@@ -40,6 +40,7 @@ internal interface IBuild : IWorkflowBuildDefinition,
     static readonly string[] TestFrameworkNames =
     [
         WorkflowLabels.Dotnet.Framework.Net_10_0,
+        "net11.0",
     ];
 
     IEnumerable<RootedPath> ICheckPrForBreakingChanges.BreakingChangeFilesToCheck =>
@@ -53,6 +54,8 @@ internal interface IBuild : IWorkflowBuildDefinition,
         BuildOptions.GitVersion.ProvideBuildId,
         BuildOptions.GitVersion.ProvideBuildVersion,
         BuildOptions.Steps.SetupDotnet.Dotnet100X(),
+        // .NET 11 SDK (RC2 until GA). The .NET 10 step above still provides the runtime for net10.0 tests.
+        new SetupDotnetStep("11.0.100-rc.2.26504.105"),
     ];
 
     Target PackProjects =>
