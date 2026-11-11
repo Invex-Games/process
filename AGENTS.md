@@ -18,7 +18,7 @@ and `toc.yml`.
 
 ## Build & language specifics
 
-- **.NET 11 SDK** (currently RC2) is required. Library and test projects target `net10.0` and `net11.0`;
+- **.NET 11 SDK** is required. Library and test projects target `net10.0` and `net11.0`;
   `ProcessRunner` uses the .NET 11 `Process.ReadAllLines` APIs under `#if NET11_0_OR_GREATER`.
 - C# `LangVersion` 15, `ImplicitUsings` and `Nullable` enabled, `TreatWarningsAsErrors` on.
 - Global usings live in each project's `_usings.cs` — add shared usings there, not per-file.
