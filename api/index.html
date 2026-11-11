@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API Reference | Invex.Process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API Reference | Invex.Process ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Invex-Games/process/blob/main/api/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="Invex.Process">
+            Invex.Process
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-reference">API Reference</h1>
+
+<p>The reference pages in this section are generated from the XML documentation in the source code, so they always
+match the shipped package; the table below is a map of where to start.</p>
+<h2 id="invexprocess">Invex.Process</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Kind</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="Invex.Process.IProcessRunner.html"><code>IProcessRunner</code></a></td>
+<td>Interface</td>
+<td>Injectable service for executing external processes. Exposes synchronous <code>Run</code> and asynchronous <code>RunAsync</code>. Registered as a singleton.</td>
+</tr>
+<tr>
+<td><a class="xref" href="Invex.Process.ProcessRunOptions.html"><code>ProcessRunOptions</code></a></td>
+<td>Record</td>
+<td>Immutable configuration for a single execution: executable name, arguments, working directory, environment variables, log levels, per-line transforms, and failure tolerance.</td>
+</tr>
+<tr>
+<td><a class="xref" href="Invex.Process.ProcessRunResult.html"><code>ProcessRunResult</code></a></td>
+<td>Record</td>
+<td>The result of a completed execution: exit code, full captured stdout/stderr, and the originating options.</td>
+</tr>
+<tr>
+<td><a class="xref" href="Invex.Process.ProcessException.html"><code>ProcessException</code></a></td>
+<td>Exception</td>
+<td>Thrown on a non-zero exit (unless <code>AllowFailedResult</code> is set); carries the exit code and the full <code>ProcessRunResult</code>.</td>
+</tr>
+<tr>
+<td><a class="xref" href="Invex.Process.ProcessHostExtensions.html"><code>ProcessHostExtensions</code></a></td>
+<td>Static class</td>
+<td><code>IServiceCollection</code> extensions; call <code>AddProcessRunner()</code> once during host setup.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="typical-flow">Typical flow</h2>
+<ol>
+<li>Register the runner with <code>AddProcessRunner()</code> from <a class="xref" href="Invex.Process.ProcessHostExtensions.html"><code>ProcessHostExtensions</code></a>.</li>
+<li>Inject <a class="xref" href="Invex.Process.IProcessRunner.html"><code>IProcessRunner</code></a> where you need to shell out.</li>
+<li>Build a <a class="xref" href="Invex.Process.ProcessRunOptions.html"><code>ProcessRunOptions</code></a> describing the invocation.</li>
+<li>Call <code>Run</code> or <code>RunAsync</code> and use the returned <a class="xref" href="Invex.Process.ProcessRunResult.html"><code>ProcessRunResult</code></a>.</li>
+</ol>
+<pre><code class="lang-csharp">var result = await processRunner.RunAsync(
+    new ProcessRunOptions(&quot;git&quot;, &quot;rev-parse HEAD&quot;)
+    {
+        WorkingDirectory = repoRoot,
+    },
+    cancellationToken);
+
+var commitSha = result.Output.Trim();
+</code></pre>
+<p>For conceptual documentation, see the <a href="../docs/introduction.html">Introduction</a>; for what you can rely on between
+releases, see <a href="../docs/versioning.html">Versioning</a>.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Invex-Games/process/blob/main/api/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Invex.Process · MIT License · Invex Games
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
