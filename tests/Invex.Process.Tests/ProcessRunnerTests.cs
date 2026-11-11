@@ -44,6 +44,37 @@ internal sealed class ProcessRunnerTests
             ? new ProcessRunOptions("cmd", "/c cd")
             : new("pwd", string.Empty);
 
+    // Writes to both streams, ending with an stdout line that has no trailing newline.
+    private static ProcessRunOptions MixedStreamsOptions() =>
+        new("sh", "-c \"echo out1; echo err1 >&2; echo out2; echo drop-err >&2; printf out3\"")
+        {
+            TransformOutput = line => line == "out2"
+                ? null
+                : $"[O]{line}",
+            TransformError = line => line.StartsWith("drop", StringComparison.Ordinal)
+                ? null
+                : $"[E]{line}",
+            OutputLogLevel = LogLevel.Information,
+            ErrorLogLevel = LogLevel.Warning,
+        };
+
+    private static void ShouldHaveMixedStreamsResult(ProcessRunResult result, RecordingLogger logger)
+    {
+        result.Output.ShouldBe($"[O]out1{Environment.NewLine}[O]out3{Environment.NewLine}");
+        result.Error.ShouldBe($"[E]err1{Environment.NewLine}");
+
+        var entries = logger.Entries;
+        entries.Where(e => e.Level == LogLevel.Information && e.Message.StartsWith("[O]", StringComparison.Ordinal))
+            .Select(e => e.Message)
+            .ShouldBe(["[O]out1", "[O]out3"], ignoreOrder: true);
+        entries.Where(e => e.Level == LogLevel.Warning && e.Message.StartsWith("[E]", StringComparison.Ordinal))
+            .Select(e => e.Message)
+            .ShouldBe(["[E]err1"]);
+        // The invocation log line names the command, so skip it when checking that suppressed lines never reach the log.
+        entries.Where(e => !e.Message.Contains("echo", StringComparison.Ordinal))
+            .ShouldNotContain(e => e.Message.Contains("out2") || e.Message.Contains("drop-err"));
+    }
+
     private static ProcessRunOptions LongRunningOptions() =>
         // ping sends one packet per second and works reliably with redirected stdout;
         // unlike `timeout`, it does not exit early when used in a non-interactive context.
@@ -531,7 +562,61 @@ internal sealed class ProcessRunnerTests
         await Should.ThrowAsync<OperationCanceledException>(() => runner.RunAsync(LongRunningOptions(), cts.Token));
     }
 
+    [Test]
+    public void Run_WithMixedStreams_CapturesAndLogsEachStreamSeparately()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("Uses sh to write to both streams.");
+
+        // Arrange
+        var logger = new RecordingLogger();
+        var runner = new ProcessRunner(logger);
+
+        // Act
+        var result = runner.Run(MixedStreamsOptions());
+
+        // Assert
+        ShouldHaveMixedStreamsResult(result, logger);
+    }
+
+    [Test]
+    public async Task RunAsync_WithMixedStreams_CapturesAndLogsEachStreamSeparately()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("Uses sh to write to both streams.");
+
+        // Arrange
+        var logger = new RecordingLogger();
+        var runner = new ProcessRunner(logger);
+
+        // Act
+        var result = await runner.RunAsync(MixedStreamsOptions());
+
+        // Assert
+        ShouldHaveMixedStreamsResult(result, logger);
+    }
+
 #if NET11_0_OR_GREATER
+    private static ProcessRunOptions KilledBySigtermOptions() =>
+        new("sh", "-c \"kill -TERM $$\"");
+
+    [Test]
+    public void Run_WhenProcessIsKilledBySignal_ErrorMessageNamesTheSignal()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("POSIX signals are not available on Windows.");
+
+        // Arrange
+        var runner = CreateRunner();
+
+        // Act
+        var exception = Should.Throw<ProcessException>(() => runner.Run(KilledBySigtermOptions()));
+
+        // Assert
+        exception.Message.ShouldContain("terminated by signal SIGTERM");
+        exception.Result.ExitCode.ShouldNotBe(0);
+    }
+
     [Test]
     public async Task RunAsync_WhenProcessIsKilledBySignal_ErrorMessageNamesTheSignal()
     {
@@ -540,13 +625,13 @@ internal sealed class ProcessRunnerTests
 
         // Arrange
         var runner = CreateRunner();
-        var options = new ProcessRunOptions("sh", "-c \"kill -TERM $$\"");
 
         // Act
-        var exception = await Should.ThrowAsync<ProcessException>(() => runner.RunAsync(options));
+        var exception = await Should.ThrowAsync<ProcessException>(() => runner.RunAsync(KilledBySigtermOptions()));
 
         // Assert
         exception.Message.ShouldContain("terminated by signal SIGTERM");
+        exception.Result.ExitCode.ShouldNotBe(0);
     }
 
 #endif
@@ -555,14 +640,23 @@ internal sealed class ProcessRunnerTests
     /// </summary>
     private sealed class RecordingLogger : ILogger<ProcessRunner>
     {
-        private readonly List<string> _messages = [];
+        private readonly List<(LogLevel Level, string Message)> _entries = [];
 
         public IReadOnlyList<string> Messages
         {
             get
             {
-                lock (_messages)
-                    return [.. _messages];
+                lock (_entries)
+                    return [.. _entries.Select(e => e.Message)];
+            }
+        }
+
+        public IReadOnlyList<(LogLevel Level, string Message)> Entries
+        {
+            get
+            {
+                lock (_entries)
+                    return [.. _entries];
             }
         }
 
@@ -580,8 +674,8 @@ internal sealed class ProcessRunnerTests
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            lock (_messages)
-                _messages.Add(formatter(state, exception));
+            lock (_entries)
+                _entries.Add((logLevel, formatter(state, exception)));
         }
     }
 }

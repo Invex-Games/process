@@ -92,8 +92,10 @@ public interface IProcessRunner
 /// <remarks>
 ///     <para>
 ///         stdout and stderr are both redirected and streamed to the logger in real time rather than
-///         buffered. On .NET 11 and later they are read as one ordered stream of lines with
-///         <c>Process.ReadAllLines</c> / <c>Process.ReadAllLinesAsync</c>; on .NET 10 they are read via
+///         buffered. On .NET 11 and later they are read as one interleaved stream of lines with
+///         <c>Process.ReadAllLines</c> / <c>Process.ReadAllLinesAsync</c>, in the order lines become available
+///         (stderr first when both are ready), which is not always the order the process wrote them; on .NET 10
+///         they are read via
 ///         <see cref="System.Diagnostics.Process.BeginOutputReadLine" /> /
 ///         <see cref="System.Diagnostics.Process.BeginErrorReadLine" />.
 ///     </para>
@@ -173,7 +175,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
 #if NET11_0_OR_GREATER
         process.Start();
 
-        // stdout and stderr arrive as one stream of lines, in the order the process wrote them.
+        // stdout and stderr arrive as one stream of lines, in the order they become available (not strictly write order).
         foreach (var line in process.ReadAllLines())
             OnLine(line.Content, line.StandardError);
 
@@ -319,7 +321,7 @@ internal sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRun
 #if NET11_0_OR_GREATER
         process.Start();
 
-        // stdout and stderr arrive as one stream of lines, in the order the process wrote them.
+        // stdout and stderr arrive as one stream of lines, in the order they become available (not strictly write order).
         await foreach (var line in process.ReadAllLinesAsync(cancellationToken))
             OnLine(line.Content, line.StandardError);
 
